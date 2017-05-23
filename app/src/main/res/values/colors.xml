@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+
+
+    <color name="main_red">#c81428</color>
+    <!-- 主色调 -->
+    <color name="main_black">#323232</color>
+    <color name="main_blackmiddle">#646464</color>
+    <color name="main_gray">#969696</color>
+    <color name="main_gray1">#30969696</color>
+    <color name="main_border">#50e5e5e5</color>
+    <color name="main_pink">#EC4CA1</color>
+    <color name="main_blue">#2CA1C6</color>
+    <color name="main_green">#46CF88</color>
+    <color name="main_1">#F9892A</color>
+
+
+    <!-- 线框、所有边框统一背景色 -->
+    <color name="main_bg">#f5f5f5</color>
+    <!-- 整个布局的背景色 -->
+    <color name="main_head">#ffffff</color>
+    <!-- 顶部布局的背景色 -->
+    <!-- <color name="main_head">#f9f9f9</color>顶部布局的背景色 -->
+    <color name="main_white">#ffffff</color>
+    <color name="bg_green">#41e8b0</color>
+    <color name="bg_green1">#4dd7cb</color>
+    <color name="bg_green2">#32c1c0</color>
+    <color name="bg_green3">#34b1b8</color>
+    <color name="bg_green4">#28b1b9</color>
+    <color name="bg_gray">#cccccc</color>
+    <color name="bg_gray2">#fafafa</color>
+    <color name="bg_gray3">#f6f6f6</color>
+    <color name="bg_gray4">#30000000</color>
+    <!-- 透明灰色 -->
+    <color name="bg_yellow">#faf5d4</color>
+    <color name="bg_yellow1">#c4bd78</color>
+    <color name="bg_yellow2">#e1d000</color>
+    <color name="bg_red">#e31e56</color>
+    <color name="bg_red1">#e93191</color>
+    <color name="bg_blue">#4aa2da</color>
+    <color name="bg_blue1">#1fb7ea</color>
+    <color name="text_red">#e62929</color>
+    <color name="text_green">#2bce55</color>
+    <color name="text_white">#ffffff</color>
+    <color name="text_gray">#969696</color>
+    <color name="text_black">#323232</color>
+    <color name="text_blue">#398db1</color>
+    <color name="text_orange">#f8c400</color>
+    <color name="grayFromSetting">#55000000</color>
+    <color name="btn_background_color">#938e18</color>
+    <color name="view_backgroune_back">#000000</color>
+    <color name="bg_blue2">#2FAFC1</color>
+    <color name="bg_gray1">#F3F3F3</color>
+</resources>

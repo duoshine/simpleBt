@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">BlueToothConnect</string>
+    <string name="dl_directory">com.bluetoothconnect</string>
+    <string name="dl_file_extension">.txt</string>
+</resources>

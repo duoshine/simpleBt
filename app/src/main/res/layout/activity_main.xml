@@ -1,0 +1,29 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:orientation="vertical"
+    >
+<Button
+    android:id="@+id/btnScan"
+    android:layout_width="match_parent"
+    android:text="扫描设备"
+    android:layout_height="wrap_content"/>
+<TextView
+    android:id="@+id/tvName"
+    android:layout_width="match_parent"
+    android:text="没有连接设备"
+    android:layout_height="wrap_content"/>
+
+    <Button
+        android:onClick="btn_send"
+        android:layout_width="match_parent"
+        android:text="发送指令"
+        android:layout_height="wrap_content"/>
+
+    <TextView
+        android:id="@+id/tv_result"
+        android:layout_width="match_parent"
+        android:text="接收:"
+        android:layout_height="wrap_content"/>
+</LinearLayout>
