@@ -202,6 +202,9 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
                 if (keysSelectDialog.isShowing()) {
                     //设备搜索完毕后 将数据
                     keysSelectDialog.notifyDataSetChanged(mbBlueToothKeys);
+                } else {
+                    //可能用户直接点击空白处销毁了dialog  那就停止扫描
+                    mBLE.stopScanDevices(MainActivity.this);
                 }
             }
         });

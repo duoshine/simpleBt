@@ -49,9 +49,9 @@ public class BluetoothLeClass {
 	private static BluetoothLeClass mBLE;
 	private final static String TAG = "BluetoothLeClass";
 	public static final UUID CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR_UUID = UUID
-			.fromString("f000c0e2-0451-4000-b000-000000000000");//接受通道
+			.fromString("49535343-1E4D-4BD9-BA61-23C647249616");//接受通道
 	public static UUID mUUID = UUID
-			.fromString("f000c0e1-0451-4000-b000-000000000000");//发送通道
+			.fromString("49535343-8841-43F4-A8D4-ECBE34729BB3");//发送通道
 /*	public static final String notifaUUid =
 			"6e400003-b5a3-f393-e0a9-e50e24dcca9e";//接受通道
 	public static final String writeUUID =
@@ -471,7 +471,9 @@ public class BluetoothLeClass {
 
 		if (mScanning) {
 			mBluetoothAdapter.stopLeScan(mLeScanCallback);
-			mScanning = false;
+			//扫描蓝牙设备对bluetoothAdapter来说是一个非常消耗资源的工作 停止扫描时 应该要取消这一过程
+			mBluetoothAdapter.cancelDiscovery();
+            mScanning = false;
 		}
 	}
 
