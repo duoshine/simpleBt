@@ -275,7 +275,6 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
         });
     }
 
-
     //写入成功回调
     @Override
     public void onCharacteristicWriteSuccess(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
@@ -325,5 +324,4 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
             Logger.d("MbLE为null");
         }
     }
-
 }

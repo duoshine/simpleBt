@@ -259,10 +259,6 @@ public class BluetoothLeClass {
 		return true;
 	}
 
-	public boolean connect() {
-		return connect(mBluetoothDeviceAddress);
-	}
-
 	//确定蓝牙是否打开 如果没有打开提示用户打开蓝牙 如果已经是打开状态则不会开启
 	public void isEnabled(Context context) {
 		if (mBluetoothAdapter == null) {
@@ -425,7 +421,6 @@ public class BluetoothLeClass {
 		}
 		//设置数据内容
 		characteristic.setValue(Util.HexString2Bytes(string));
-
 		//往蓝牙模块写入数据
 		mBluetoothGatt.writeCharacteristic(characteristic);
 		return true;
@@ -456,12 +451,10 @@ public class BluetoothLeClass {
 			mHandler.postDelayed(new Runnable() {
 				@Override
 				public void run() {
-					Logger.d("五秒到了--->停止扫描");
 					mScanning = false;
 					mBluetoothAdapter.stopLeScan(mLeScanCallback);
 				}
 			}, SCAN_PERIOD);
-			Logger.d("五秒倒计时开始--->开始扫描");
 			mScanning = true;
 			mBluetoothAdapter.startLeScan(mLeScanCallback);
 		} else {
