@@ -17,6 +17,7 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import chenanduo.bluetoothconnect.bluetooth.BlueToothKey;
 import chenanduo.bluetoothconnect.bluetooth.BluetoothLeClass;
@@ -202,9 +203,6 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
                 if (keysSelectDialog.isShowing()) {
                     //设备搜索完毕后 将数据
                     keysSelectDialog.notifyDataSetChanged(mbBlueToothKeys);
-                } else {
-                    //可能用户直接点击空白处销毁了dialog  那就停止扫描
-                    mBLE.stopScanDevices(MainActivity.this);
                 }
             }
         });
@@ -317,7 +315,7 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
     /*发送指令  uuid为发送的uuid */
     public void write(byte[] bytes) {
         if (mBLE != null) {
-            boolean succeeded = mBLE.writeCharacteristic(Util.Bytes2HexString_noblack(bytes), BluetoothLeClass.mUUID);
+            boolean succeeded = mBLE.writeCharacteristic(Util.Bytes2HexString_noblack(bytes), UUID.fromString(BluetoothLeClass.WRITE_UUID));
             if (succeeded) {
                 Logger.d("发送成功");
             } else {
