@@ -1,6 +1,7 @@
 package chenanduo.bluetoothconnect;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -8,6 +9,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -36,6 +38,8 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
     private TextView mName;
     private long mStartTime;
     private TextView tv_result;
+    private ProgressDialog mDialog;
+    private Handler handler = new Handler();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -174,6 +178,8 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
         mBLE.connect(mbBlueToothKey.device.getAddress());
         //隐藏dialog
         keysSelectDialog.dismiss();
+        /*显示连接进度*/
+        showDialog();
     }
 
     //扫描结果回调  该方法被回调多次  该方法中尽量少做操作 需要尽快返回 不然会报错
@@ -221,6 +227,8 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+                /*隐藏连接进度*/
+                hiedDialog();
                 if (!TextUtils.isEmpty(name)) {
                     Logger.savelog("连接到设备的:" + name);
                     mName.setText("连接到设备:" + name);
@@ -323,6 +331,28 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
             }
         } else {
             Logger.d("MbLE为null");
+        }
+    }
+
+    private void showDialog() {
+        /*五秒后如果还没连接上就认为连接超时*/
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (mDialog.isShowing()) {
+                    hiedDialog();
+                    toast("连接超时...");
+                }
+            }
+        }, 5000);
+        mDialog = new ProgressDialog(MainActivity.this);
+        mDialog.setMessage("正在连接...");
+        mDialog.show();
+    }
+
+    private void hiedDialog() {
+        if (mDialog != null) {
+            mDialog.dismiss();
         }
     }
 }
