@@ -85,16 +85,13 @@ public class BlueToothKeysAdapter extends BaseAdapter {
 						+ key.device.getAddress());
 			}*/
             String name = key.device.getName();
+            this.btn_img.setImageResource(R.mipmap.ic_launcher);
             if (!TextUtils.isEmpty(name)) {
                 this.tv_devicename.setText("name：" + name);
-                this.btn_img.setImageResource(R.mipmap.ic_launcher);
-                this.tv_devicesaddress.setText("address："
-                        + key.device.getAddress());
+                this.tv_devicesaddress.setText("address：" + key.device.getAddress());
             } else {
                 this.tv_devicename.setText("name：--");
-                this.btn_img.setImageResource(R.mipmap.ic_launcher);
-                this.tv_devicesaddress.setText("address：--"
-                        + key.device.getAddress());
+                this.tv_devicesaddress.setText("address：--");
             }
         }
     }

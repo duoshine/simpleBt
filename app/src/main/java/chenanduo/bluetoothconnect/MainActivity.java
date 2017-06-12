@@ -128,8 +128,8 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
         if (Build.VERSION.SDK_INT >= 23) {
             int checkAccessFinePermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION);//位置
             int sdPermission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);//sd
-            if (checkAccessFinePermission != PackageManager.PERMISSION_GRANTED ||sdPermission != PackageManager.PERMISSION_GRANTED ) {
-                String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.WRITE_EXTERNAL_STORAGE};
+            if (checkAccessFinePermission != PackageManager.PERMISSION_GRANTED || sdPermission != PackageManager.PERMISSION_GRANTED) {
+                String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE};
                 ActivityCompat.requestPermissions(this, permissions,
                         REQUEST_PERMISSION_ACCESS_LOCATION);
                 return;
