@@ -32,12 +32,10 @@ import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-
-import chenanduo.bluetoothconnect.util.Logger;
-import chenanduo.bluetoothconnect.util.Util;
 
 
 /**
@@ -45,82 +43,78 @@ import chenanduo.bluetoothconnect.util.Util;
  * hosted on a given Bluetooth LE device.
  */
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-public class BluetoothLeClass {
+public class BluetoothLeClass implements LeScanCallback {
 
     private static BluetoothLeClass mBLE;
     private final static String TAG = "BluetoothLeClass";
-    private static final String SERVICE_UUID = "49535343-8841-43F4-A8D4-ECBE34729BB3";
-    private static final String NOTIFICATION_UUID = "49535343-8841-43F4-A8D4-ECBE34729BB3";
-    public static final String WRITE_UUID = "49535343-8841-43F4-A8D4-ECBE34729BB3";
+    private static String SERVICE_UUID;
+    private static String NOTIFI_UUID;
+    private static String WRITE_UUID;
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     public String mBluetoothDeviceAddress;
     public BluetoothGatt mBluetoothGatt;
-    private static final long SCAN_PERIOD = 5000;
+    //扫描时间
+    private static long SCAN_PERIOD = 5000;
     private boolean mScanning = false;
     private Handler mHandler = new Handler();
-    private BluetoothGattCharacteristic notifyCharacteristic;
     private BluetoothGattCharacteristic bleGattCharacteristic;
 
+    // 设备连接断开
+    public static final int STATE_DISCONNECTED = 0;
+    // 设备正在扫描
+    public static final int STATE_SCANNING = 1;
+    // 设备扫描结束
+    public static final int STATE_SCANNED = 2;
+    // 设备正在连接
+    public static final int STATE_CONNECTING = 3;
+    // 设备连接成功
+    public static final int STATE_CONNECTED = 4;
+    // 当前设备状态
+    private int connectionState = STATE_DISCONNECTED;
 
-    public interface OnConnectListener {
-        public void onConnect(BluetoothGatt gatt);
-    }
-
-    public interface OnDisconnectListener {
-        public void onDisconnect(BluetoothGatt gatt);
-    }
-
-    public interface OnServiceDiscoverListener {
-        public void onServiceDiscover(BluetoothGatt gatt);
-    }
-
-    public interface OnDataAvailableListener {
-        public void onCharacteristicRead(BluetoothGatt gatt,
-                                         BluetoothGattCharacteristic characteristic, int status);
-
-        public void onCharacteristicWrite(BluetoothGatt gatt,
-                                          BluetoothGattCharacteristic characteristic);
-
-        public void onCharacteristicWriteSuccess(BluetoothGatt gatt,
-                                                 BluetoothGattCharacteristic characteristic,
-                                                 int status);
-    }
-
-    private OnConnectListener mOnConnectListener;
-    private OnDisconnectListener mOnDisconnectListener;
-    private OnServiceDiscoverListener mOnServiceDiscoverListener;
-    private OnDataAvailableListener mOnDataAvailableListener;
     private static Context mContext;
 
-    public void setmContext(Context mContext) {
-        this.mContext = mContext;
+    //当前连接的蓝牙设备的名字
+    private String bleName = null;
+
+    //当前连接的蓝牙设备的mac地址
+    private String bleMac = null;
+
+    //存放扫描到的设备
+    private static List<BlueToothKey> mbBlueToothKeys;
+
+    //用来判断集合中是否已经有重复蓝牙设备
+    boolean exist = false;
+
+    /*回调设备的连接状态等信息*/
+    public interface BluetoothChangeListener {
+        void onCurrentState(int state);
+
+        void onBleWriteResult(byte[] result);
+
+        void onBleScanResult(List<BlueToothKey> device);
     }
 
-    public void setOnConnectListener(OnConnectListener l) {
-        mOnConnectListener = l;
-    }
+    private BluetoothChangeListener mBluetoothChangeListener;
 
-    public void setOnDisconnectListener(OnDisconnectListener l) {
-        mOnDisconnectListener = l;
-    }
-
-    public void setOnServiceDiscoverListener(OnServiceDiscoverListener l) {
-        mOnServiceDiscoverListener = l;
-    }
-
-    public void setOnDataAvailableListener(OnDataAvailableListener l) {
-        mOnDataAvailableListener = l;
+    public void getBleCurrentState(BluetoothChangeListener bluetoothChangeListener) {
+        mBluetoothChangeListener = bluetoothChangeListener;
     }
 
     private BluetoothLeClass(Context c) {
         mContext = c;
     }
 
-    public static BluetoothLeClass getInstane(Context context) {
+    public static BluetoothLeClass getInstane(Context context, String serviceuuid, String notifiuuid, String writeuuid, long scantime) {
         if (mBLE == null) {
             mContext = context;
             mBLE = new BluetoothLeClass(mContext);
+            mbBlueToothKeys = new ArrayList<>();
+            SERVICE_UUID = serviceuuid;
+            NOTIFI_UUID = notifiuuid;
+            WRITE_UUID = writeuuid;
+            SCAN_PERIOD = scantime;
         }
         return mBLE;
     }
@@ -140,11 +134,15 @@ public class BluetoothLeClass {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             Log.i(TAG, "onConnectionStateChange:" + newState + "");
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                if (mOnConnectListener != null)
-                    mOnConnectListener.onConnect(gatt);
+                //mStartTime = System.currentTimeMillis();
+                //搜索连接设备所支持的service  需要连接上才可以 这个方法是异步操作 在回调函数onServicesDiscovered中得到status
+                //通过判断status是否等于BluetoothGatt.GATT_SUCCESS来判断查找Service是否成功
+                gatt.discoverServices();
+                setBleCurrentState(STATE_CONNECTED);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                if (mOnDisconnectListener != null)
-                    mOnDisconnectListener.onDisconnect(gatt);
+                setBleCurrentState(STATE_DISCONNECTED);
+                close();
+                mBluetoothGatt = null;
             }
         }
 
@@ -155,9 +153,9 @@ public class BluetoothLeClass {
          */
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            if (status == BluetoothGatt.CONNECTION_PRIORITY_BALANCED) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                displayGattServices(gatt.getServices());
             }
-            displayGattServices(gatt.getServices());
         }
 
         /**
@@ -169,9 +167,7 @@ public class BluetoothLeClass {
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt,
                                          BluetoothGattCharacteristic characteristic, int status) {
-            if (mOnDataAvailableListener != null)
-                mOnDataAvailableListener.onCharacteristicRead(gatt,
-                        characteristic, status);
+            super.onCharacteristicRead(gatt, characteristic, status);
         }
 
         /**
@@ -182,10 +178,7 @@ public class BluetoothLeClass {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-            if (mOnDataAvailableListener != null) {
-                mOnDataAvailableListener.onCharacteristicWrite(gatt,
-                        characteristic);
-            }
+
         }
 
         /**
@@ -196,10 +189,8 @@ public class BluetoothLeClass {
          */
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-            //            super.onCharacteristicWrite(gatt, characteristic, status);
-            //            LogUtil.d("onCharacteristicWrite:"+ ByteUtil.Bytes2HexString(characteristic.getValue()));
-            if (mOnDataAvailableListener != null) {
-                mOnDataAvailableListener.onCharacteristicWriteSuccess(gatt, characteristic, status);
+            if (mBluetoothChangeListener != null) {
+                mBluetoothChangeListener.onBleWriteResult(characteristic.getValue());
             }
         }
     };
@@ -209,19 +200,15 @@ public class BluetoothLeClass {
         while (localIterator1.hasNext()) {
             BluetoothGattService localBluetoothGattService = (BluetoothGattService) localIterator1
                     .next();
-            if (localBluetoothGattService.getUuid().toString()
-                    .equalsIgnoreCase(SERVICE_UUID)) {
+            if (localBluetoothGattService.getUuid().toString().equalsIgnoreCase(SERVICE_UUID)) {
                 List localList = localBluetoothGattService.getCharacteristics();
                 Iterator localIterator2 = localList.iterator();
                 while (localIterator2.hasNext()) {
                     BluetoothGattCharacteristic localBluetoothGattCharacteristic = (BluetoothGattCharacteristic)
-                            localIterator2
-                                    .next();
-                    if (localBluetoothGattCharacteristic.getUuid().toString()
-                            .equalsIgnoreCase(NOTIFICATION_UUID)) {
-                        bleGattCharacteristic = localBluetoothGattCharacteristic;
-                        mBluetoothGatt.setCharacteristicNotification(bleGattCharacteristic, true);
-					/*//notifiction默认是关闭的  需要设置0x01打开
+                            localIterator2.next();
+                    if (localBluetoothGattCharacteristic.getUuid().toString().equalsIgnoreCase(NOTIFI_UUID)) {
+                        mBluetoothGatt.setCharacteristicNotification(localBluetoothGattCharacteristic, true);
+                    /*//notifiction默认是关闭的  需要设置0x01打开
                         List<BluetoothGattDescriptor> descriptors = localBluetoothGattCharacteristic.getDescriptors();
 						for (int i = 0; i < descriptors.size(); i++) {
 							if (descriptors.get(i).getUuid().toString().equals(DISENABLE)) {
@@ -231,10 +218,10 @@ public class BluetoothLeClass {
 							}
 						}*/
                         BluetoothGattDescriptor descriptor = localBluetoothGattCharacteristic
-                                .getDescriptor(UUID.fromString(NOTIFICATION_UUID));
+                                .getDescriptor(UUID.fromString(NOTIFI_UUID));
                         if (descriptor == null) {
                             descriptor = new BluetoothGattDescriptor(
-                                    UUID.fromString(NOTIFICATION_UUID),
+                                    UUID.fromString(NOTIFI_UUID),
                                     BluetoothGattDescriptor.PERMISSION_WRITE);
                         }
                         descriptor
@@ -249,7 +236,7 @@ public class BluetoothLeClass {
     }
 
     /*
-     * 初始化对本地蓝牙适配器的引用
+     * 初始化对本地蓝牙适配器的引用 并判断蓝牙是否是开启状态
      * Initializes a reference to the local Bluetooth adapter.
      * 如果初始化成功则返回true
      * @return Return true if the initialization is successful.
@@ -268,18 +255,10 @@ public class BluetoothLeClass {
             Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
             return false;
         }
-        //直接打开蓝牙
-        mBluetoothAdapter.enable();
-        return true;
-    }
-
-    //确定蓝牙是否打开 如果没有打开提示用户打开蓝牙 如果已经是打开状态则不会开启
-    public void isEnabled(Context context) {
-        if (mBluetoothAdapter == null) {
-            return;
-        }
-        if (!mBluetoothAdapter.isEnabled()) {
-            mBluetoothAdapter.enable();
+        if (mBluetoothAdapter.isEnabled()) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -301,6 +280,8 @@ public class BluetoothLeClass {
                     "BluetoothAdapter not initialized or unspecified address.");
             return false;
         }
+        /*设置状态连接中*/
+        setBleCurrentState(STATE_CONNECTING);
         // 之前连接的设备尝试重新连接
         if (mBluetoothDeviceAddress != null
                 && address.equals(mBluetoothDeviceAddress)
@@ -311,7 +292,7 @@ public class BluetoothLeClass {
                 return false;
             }
         }
-        //TODO 根据mac地址连接蓝牙
+        //根据mac地址连接蓝牙
         final BluetoothDevice device = mBluetoothAdapter
                 .getRemoteDevice(address);
         if (device == null) {
@@ -345,7 +326,6 @@ public class BluetoothLeClass {
         if (mBluetoothGatt == null) {
             return;
         }
-        Logger.d("close");
         mBluetoothGatt.close();
         mBluetoothGatt = null;
     }
@@ -368,31 +348,20 @@ public class BluetoothLeClass {
         mBluetoothGatt.readCharacteristic(characteristic);
     }
 
-    public void writeCharacteristic(BluetoothGattCharacteristic characteristic) {
-        mBluetoothGatt.writeCharacteristic(characteristic);
-    }
-
-/*	public void writeCharacteristic(String string) {
-		BluetoothGattCharacteristic characteristic = mBluetoothGatt.getService(UUID.fromString(
-				writeUUID)).getCharacteristic(UUID.fromString(writeUUID));
-		characteristic.setValue(string);
-		mBluetoothGatt.writeCharacteristic(characteristic);
-	}*/
-
     /*
      * 发送指令方法
      * * @param string
      * @param uuid
      * @return
      */
-    public boolean writeCharacteristic(String string, UUID uuid) {
+    public boolean writeCharacteristic(byte[] value) {
         BluetoothGattCharacteristic characteristic = null;
         if (mBluetoothGatt != null) {
             for (BluetoothGattService bluetoothGattService : mBluetoothGatt
                     .getServices()) {
                 for (BluetoothGattCharacteristic bluetoothGattCharacteristics : bluetoothGattService
                         .getCharacteristics()) {
-                    if (uuid.equals(bluetoothGattCharacteristics.getUuid())) {
+                    if (WRITE_UUID.equals(bluetoothGattCharacteristics.getUuid())) {
                         characteristic = bluetoothGattCharacteristics;
                         //this.setCharacteristicNotification(characteristic, true);
                         break;
@@ -400,12 +369,11 @@ public class BluetoothLeClass {
                 }
             }
         }
-
         if (characteristic == null) {
             return false;
         }
         //设置数据内容
-        characteristic.setValue(Util.HexString2Bytes(string));
+        characteristic.setValue(value);
         //往蓝牙模块写入数据
         mBluetoothGatt.writeCharacteristic(characteristic);
         return true;
@@ -428,23 +396,25 @@ public class BluetoothLeClass {
      * @param enable
      * @param mLeScanCallback
      */
-    public void startScanDevices(final boolean enable,
-                                 final LeScanCallback mLeScanCallback) {
+    public void startScanDevices(final boolean enable) {
         //五秒后停止扫描
         if (enable) {
+            //开始扫描前清空集合
+            mbBlueToothKeys.clear();
             // Stops scanning after a pre-defined scan period.
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     mScanning = false;
-                    mBluetoothAdapter.stopLeScan(mLeScanCallback);
+                    mBluetoothAdapter.stopLeScan(BluetoothLeClass.this);
                 }
             }, SCAN_PERIOD);
             mScanning = true;
-            mBluetoothAdapter.startLeScan(mLeScanCallback);
+            mBluetoothAdapter.startLeScan(BluetoothLeClass.this);
         } else {
+            mBluetoothAdapter.stopLeScan(BluetoothLeClass.this);
+            mHandler.removeCallbacksAndMessages(null);
             mScanning = false;
-            mBluetoothAdapter.stopLeScan(mLeScanCallback);
         }
     }
 
@@ -452,10 +422,11 @@ public class BluetoothLeClass {
      *
      * @param mLeScanCallback
      */
-    public void stopScanDevices(LeScanCallback mLeScanCallback) {
-
+    public void stopScanDevices() {
+        //释放建立连接请求，然后处理下一个设备连接请求
+        disconnect();
         if (mScanning) {
-            mBluetoothAdapter.stopLeScan(mLeScanCallback);
+            mBluetoothAdapter.stopLeScan(BluetoothLeClass.this);
             //扫描蓝牙设备对bluetoothAdapter来说是一个非常消耗资源的工作 停止扫描时 应该要取消这一过程
             mBluetoothAdapter.cancelDiscovery();
             mScanning = false;
@@ -463,14 +434,44 @@ public class BluetoothLeClass {
     }
 
     /**
-     * 判断蓝牙是否开启
+     * 设置所有蓝牙设备连接状态回调给外部处理
      *
-     * @param context
-     * @return
+     * @param state
      */
-    public static boolean checkBluetoothOpen(Context context) {
-        BluetoothManager bluetoothManager = (BluetoothManager) context.getApplicationContext().getSystemService(Context.BLUETOOTH_SERVICE);
-        BluetoothAdapter adapter = bluetoothManager.getAdapter();
-        return adapter.isEnabled();
+    private void setBleCurrentState(int state) {
+        connectionState = state;
+        ThreadUtils.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mBluetoothChangeListener != null) {
+                    mBluetoothChangeListener.onCurrentState(connectionState);
+                }
+            }
+        });
+    }
+
+    /*扫描结果*/
+    @Override
+    public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+        //根据mac地质判断扫描到的设备是否已经存在集合中了
+        for (int i = 0; i < mbBlueToothKeys.size(); i++) {
+            if (mbBlueToothKeys.get(i).device.getAddress().equals(
+                    device.getAddress())) {
+                exist = true;
+                break;
+            }
+        }
+        //如果不存在 就放进集合中
+        if (!exist) {
+            mbBlueToothKeys
+                    .add(new BlueToothKey(
+                            device,
+                            BlueToothKey.KeyConnectState.无连接.getValue(),
+                            false));
+        }
+        if (mBluetoothChangeListener != null) {
+            mBluetoothChangeListener.onBleScanResult(mbBlueToothKeys);
+        }
+        exist = false;
     }
 }
