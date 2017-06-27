@@ -90,7 +90,9 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
             //扫描回调  集合就是扫描到的附近的设备
             @Override
             public void onBleScanResult(List<BlueToothKey> device) {
-                keysSelectDialog.notifyDataSetChanged(device);
+                if (keysSelectDialog.isShowing()) {
+                    keysSelectDialog.notifyDataSetChanged(device);
+                }
             }
         });
 
@@ -98,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
         keysSelectDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
             @Override
             public void onCancel(DialogInterface dialog) {
-                if (mBLE!=null) {
+                if (mBLE != null) {
                     mBLE.startScanDevices(false);
                 }
             }
@@ -109,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
     private void bleCurrentState(int state) {
         // 设备连接成功
         if (state == BluetoothLeClass.STATE_CONNECTED) {
+            System.out.println("状态:连接成功");
             /*隐藏连接进度*/
             hiedDialog();
             if (!TextUtils.isEmpty(currentConnectBle)) {
@@ -116,13 +119,18 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
             } else {
                 mName.setText("连接到设备:--");
             }
-        }
-        //设备连接断开
-        else if (state == BluetoothLeClass.STATE_DISCONNECTED) {
+        } else if (state == BluetoothLeClass.STATE_DISCONNECTED) { //设备连接断开
+            System.out.println("状态:连接断开");
             if (!TextUtils.isEmpty(currentConnectBle)) {
                 Toast.makeText(MainActivity.this, "设备" + currentConnectBle + "已断开连接", Toast.LENGTH_SHORT).show();
             }
             mName.setText("没有连接设备");
+        } else if (state == BluetoothLeClass.STATE_SCANNING) {
+            System.out.println("状态:正在扫描");
+        } else if (state == BluetoothLeClass.STATE_SCANNED) {
+            System.out.println("状态:扫描结束");
+        } else if (state == BluetoothLeClass.STATE_CONNECTING) {
+            System.out.println("状态:正在连接");
         }
     }
 
@@ -152,8 +160,6 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
 
     //选择钥匙 或者 搜索钥匙
     private void reSearchKeys() {
-        //停止上一次扫描
-        mBLE.stopScanDevices();
         //开始扫描
         mBLE.startScanDevices(true);
         keysSelectDialog.clear();

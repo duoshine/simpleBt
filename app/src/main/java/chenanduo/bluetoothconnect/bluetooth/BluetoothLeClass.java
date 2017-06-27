@@ -29,6 +29,7 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
 
@@ -74,12 +75,6 @@ public class BluetoothLeClass implements LeScanCallback {
     private int connectionState = STATE_DISCONNECTED;
 
     private static Context mContext;
-
-    //当前连接的蓝牙设备的名字
-    private String bleName = null;
-
-    //当前连接的蓝牙设备的mac地址
-    private String bleMac = null;
 
     //存放扫描到的设备
     private static List<BlueToothKey> mbBlueToothKeys;
@@ -138,11 +133,20 @@ public class BluetoothLeClass implements LeScanCallback {
                 //搜索连接设备所支持的service  需要连接上才可以 这个方法是异步操作 在回调函数onServicesDiscovered中得到status
                 //通过判断status是否等于BluetoothGatt.GATT_SUCCESS来判断查找Service是否成功
                 gatt.discoverServices();
-                setBleCurrentState(STATE_CONNECTED);
+                ThreadUtils.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setBleCurrentState(STATE_CONNECTED);
+                    }
+                });
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                setBleCurrentState(STATE_DISCONNECTED);
+                ThreadUtils.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        setBleCurrentState(STATE_DISCONNECTED);
+                    }
+                });
                 close();
-                mBluetoothGatt = null;
             }
         }
 
@@ -178,7 +182,6 @@ public class BluetoothLeClass implements LeScanCallback {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-
         }
 
         /**
@@ -188,9 +191,14 @@ public class BluetoothLeClass implements LeScanCallback {
          * @param status
          */
         @Override
-        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+        public void onCharacteristicWrite(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, int status) {
             if (mBluetoothChangeListener != null) {
-                mBluetoothChangeListener.onBleWriteResult(characteristic.getValue());
+                ThreadUtils.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mBluetoothChangeListener.onBleWriteResult(characteristic.getValue());
+                    }
+                });
             }
         }
     };
@@ -280,6 +288,7 @@ public class BluetoothLeClass implements LeScanCallback {
                     "BluetoothAdapter not initialized or unspecified address.");
             return false;
         }
+        stopScanDevices();
         /*设置状态连接中*/
         setBleCurrentState(STATE_CONNECTING);
         // 之前连接的设备尝试重新连接
@@ -399,22 +408,27 @@ public class BluetoothLeClass implements LeScanCallback {
     public void startScanDevices(final boolean enable) {
         //五秒后停止扫描
         if (enable) {
-            //开始扫描前清空集合
+            //开始扫描前清空集合 并停止上一次扫描
             mbBlueToothKeys.clear();
+            stopScanDevices();
             // Stops scanning after a pre-defined scan period.
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     mScanning = false;
                     mBluetoothAdapter.stopLeScan(BluetoothLeClass.this);
+                    setScanfinish();
                 }
             }, SCAN_PERIOD);
             mScanning = true;
             mBluetoothAdapter.startLeScan(BluetoothLeClass.this);
+            //设置状态扫描中
+            setBleCurrentState(STATE_SCANNING);
         } else {
             mBluetoothAdapter.stopLeScan(BluetoothLeClass.this);
             mHandler.removeCallbacksAndMessages(null);
             mScanning = false;
+            setScanfinish();
         }
     }
 
@@ -430,7 +444,15 @@ public class BluetoothLeClass implements LeScanCallback {
             //扫描蓝牙设备对bluetoothAdapter来说是一个非常消耗资源的工作 停止扫描时 应该要取消这一过程
             mBluetoothAdapter.cancelDiscovery();
             mScanning = false;
+            setScanfinish();
+            mHandler.removeCallbacksAndMessages(null);
         }
+    }
+
+    //设置扫描结束状态
+    private void setScanfinish() {
+        //设置扫描结束
+        setBleCurrentState(STATE_SCANNED);
     }
 
     /**
@@ -440,14 +462,10 @@ public class BluetoothLeClass implements LeScanCallback {
      */
     private void setBleCurrentState(int state) {
         connectionState = state;
-        ThreadUtils.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (mBluetoothChangeListener != null) {
-                    mBluetoothChangeListener.onCurrentState(connectionState);
-                }
-            }
-        });
+        if (mBluetoothChangeListener != null) {
+            mBluetoothChangeListener.onCurrentState(state);
+        }
+
     }
 
     /*扫描结果*/
@@ -473,5 +491,14 @@ public class BluetoothLeClass implements LeScanCallback {
             mBluetoothChangeListener.onBleScanResult(mbBlueToothKeys);
         }
         exist = false;
+    }
+
+    public boolean isMainThread() {
+        return Looper.getMainLooper().getThread().getId() == Thread.currentThread().getId();
+    }
+
+    //返回当前连接状态
+    public int getBleConnectState() {
+        return connectionState;
     }
 }
