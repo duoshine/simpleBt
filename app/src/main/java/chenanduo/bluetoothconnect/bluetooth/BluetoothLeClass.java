@@ -184,7 +184,15 @@ public class BluetoothLeClass implements LeScanCallback {
          */
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
-                                            BluetoothGattCharacteristic characteristic) {
+                                            final BluetoothGattCharacteristic characteristic) {
+            if (mBluetoothChangeListener != null) {
+                ThreadUtils.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mBluetoothChangeListener.onBleWriteResult(characteristic.getValue());
+                    }
+                });
+            }
         }
 
         /**
@@ -194,15 +202,8 @@ public class BluetoothLeClass implements LeScanCallback {
          * @param status
          */
         @Override
-        public void onCharacteristicWrite(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, int status) {
-            if (mBluetoothChangeListener != null) {
-                ThreadUtils.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mBluetoothChangeListener.onBleWriteResult(characteristic.getValue());
-                    }
-                });
-            }
+        public void onCharacteristicWrite(BluetoothGatt gatt,  BluetoothGattCharacteristic characteristic, int status) {
+
         }
     };
 
