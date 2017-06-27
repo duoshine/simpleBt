@@ -59,7 +59,6 @@ public class BluetoothLeClass implements LeScanCallback {
     private static long SCAN_PERIOD = 5000;
     private boolean mScanning = false;
     private Handler mHandler = new Handler();
-    private BluetoothGattCharacteristic bleGattCharacteristic;
 
     // 设备连接断开
     public static final int STATE_DISCONNECTED = 0;
@@ -129,9 +128,12 @@ public class BluetoothLeClass implements LeScanCallback {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             Log.i(TAG, "onConnectionStateChange:" + newState + "");
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                //mStartTime = System.currentTimeMillis();
-                //搜索连接设备所支持的service  需要连接上才可以 这个方法是异步操作 在回调函数onServicesDiscovered中得到status
-                //通过判断status是否等于BluetoothGatt.GATT_SUCCESS来判断查找Service是否成功
+                /**
+                 搜索连接设备所支持的service  需要连接上才可以 这个方法是异步操作
+                 在回调函数onServicesDiscovered中得到status
+                 通过判断status是否等于BluetoothGatt.GATT_SUCCESS来判断查找Service是否成功
+                 设备连接成功就开始查找该设备所有的服务 这大概有一点延迟
+                 */
                 gatt.discoverServices();
                 ThreadUtils.runOnUiThread(new Runnable() {
                     @Override
@@ -146,6 +148,7 @@ public class BluetoothLeClass implements LeScanCallback {
                         setBleCurrentState(STATE_DISCONNECTED);
                     }
                 });
+                //避免重复连接产生的Bug 还是close一下
                 close();
             }
         }
