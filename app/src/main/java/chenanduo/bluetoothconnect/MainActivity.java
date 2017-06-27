@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
         reSearchKeys();
     }
 
-    //选择钥匙 或者 搜索钥匙
+    //选择
     private void reSearchKeys() {
         //开始扫描
         mBLE.startScanDevices(true);
@@ -240,7 +240,7 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
         write(bytes);
     }
 
-    /*发送指令  uuid为发送的uuid */
+    /*发送指令 */
     public void write(byte[] bytes) {
         if (mBLE != null) {
             mBLE.writeCharacteristic(bytes);

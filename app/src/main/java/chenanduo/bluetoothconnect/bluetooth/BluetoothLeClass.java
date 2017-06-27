@@ -222,7 +222,7 @@ public class BluetoothLeClass implements LeScanCallback {
                     /*//notifiction默认是关闭的  需要设置0x01打开
                         List<BluetoothGattDescriptor> descriptors = localBluetoothGattCharacteristic.getDescriptors();
 						for (int i = 0; i < descriptors.size(); i++) {
-							if (descriptors.get(i).getUuid().toString().equals(DISENABLE)) {
+							if (descriptors.get(i).getUuid().toString().equalsIgnoreCase(DISENABLE)) {
 								BluetoothGattDescriptor bluetoothGattDescriptor = descriptors.get(i);
 								bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.PERMISSION_READ);
 								mBluetoothGatt.writeDescriptor(bluetoothGattDescriptor);
@@ -373,7 +373,7 @@ public class BluetoothLeClass implements LeScanCallback {
                     .getServices()) {
                 for (BluetoothGattCharacteristic bluetoothGattCharacteristics : bluetoothGattService
                         .getCharacteristics()) {
-                    if (WRITE_UUID.equals(bluetoothGattCharacteristics.getUuid())) {
+                    if (WRITE_UUID.equalsIgnoreCase(bluetoothGattCharacteristics.getUuid().toString())) {
                         characteristic = bluetoothGattCharacteristics;
                         //this.setCharacteristicNotification(characteristic, true);
                         break;
