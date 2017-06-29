@@ -76,7 +76,7 @@ public class BluetoothLeClass implements LeScanCallback {
     private static Context mContext;
 
     //存放扫描到的设备
-    private static List<BlueToothKey> mbBlueToothKeys;
+    private static List<BluetoothDevice> mbBlueToothKeys;
 
     //用来判断集合中是否已经有重复蓝牙设备
     boolean exist = false;
@@ -87,7 +87,7 @@ public class BluetoothLeClass implements LeScanCallback {
 
         void onBleWriteResult(byte[] result);
 
-        void onBleScanResult(List<BlueToothKey> device);
+        void onBleScanResult(List<BluetoothDevice> device);
     }
 
     private BluetoothChangeListener mBluetoothChangeListener;
@@ -116,6 +116,7 @@ public class BluetoothLeClass implements LeScanCallback {
         SCAN_PERIOD = time;
         return mBLE;
     }
+
     // Implements callback methods for GATT event s that the app cares about.
     // For
     // example,
@@ -205,7 +206,7 @@ public class BluetoothLeClass implements LeScanCallback {
          * @param status
          */
         @Override
-        public void onCharacteristicWrite(BluetoothGatt gatt,  BluetoothGattCharacteristic characteristic, int status) {
+        public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
 
         }
     };
@@ -480,7 +481,7 @@ public class BluetoothLeClass implements LeScanCallback {
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
         //根据mac地质判断扫描到的设备是否已经存在集合中了
         for (int i = 0; i < mbBlueToothKeys.size(); i++) {
-            if (mbBlueToothKeys.get(i).device.getAddress().equals(
+            if (mbBlueToothKeys.get(i).getAddress().equals(
                     device.getAddress())) {
                 exist = true;
                 break;
@@ -488,11 +489,7 @@ public class BluetoothLeClass implements LeScanCallback {
         }
         //如果不存在 就放进集合中
         if (!exist) {
-            mbBlueToothKeys
-                    .add(new BlueToothKey(
-                            device,
-                            BlueToothKey.KeyConnectState.无连接.getValue(),
-                            false));
+            mbBlueToothKeys.add(device);
         }
         if (mBluetoothChangeListener != null) {
             mBluetoothChangeListener.onBleScanResult(mbBlueToothKeys);

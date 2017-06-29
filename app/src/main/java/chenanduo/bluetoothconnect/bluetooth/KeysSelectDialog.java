@@ -2,6 +2,7 @@ package chenanduo.bluetoothconnect.bluetooth;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -26,7 +27,7 @@ public class KeysSelectDialog extends AlertDialog
     private Context context;
     private DisplayMetrics displayMetrics;
     private ViewHoder layout;
-    private List<BlueToothKey> mbBlueToothKeys;
+    private List<BluetoothDevice> mbBlueToothKeys;
     private BlueToothKeysAdapter mKeysAdapter;
     private View.OnClickListener onClickListener;
     private OnKeySelectedListener onKeySelectedListener;
@@ -63,18 +64,16 @@ public class KeysSelectDialog extends AlertDialog
             {
                 if (onKeySelectedListener != null)
                 {
-                    onKeySelectedListener.OnKeySelected(mbBlueToothKeys
-                            .get(arg2));
+                    onKeySelectedListener.OnKeySelected(mbBlueToothKeys.get(arg2));
                 }
             }
         });
-        mbBlueToothKeys = new ArrayList<BlueToothKey>();
-        mKeysAdapter = new BlueToothKeysAdapter(context,
-                mbBlueToothKeys);
+        mbBlueToothKeys = new ArrayList<BluetoothDevice>();
+        mKeysAdapter = new BlueToothKeysAdapter(context, mbBlueToothKeys);
         layout.lv_keys.setAdapter(mKeysAdapter);
     }
 
-    public void showDialog(List<BlueToothKey> blueToothKeys)
+    public void showDialog(List<BluetoothDevice> blueToothKeys)
     {
         this.notifyDataSetChanged(blueToothKeys);
         this.show();
@@ -91,7 +90,7 @@ public class KeysSelectDialog extends AlertDialog
         this.mKeysAdapter.notifyDataSetChanged();
     }
 
-    public void notifyDataSetChanged(List<BlueToothKey> mbBlueToothKeys2)
+    public void notifyDataSetChanged(List<BluetoothDevice> mbBlueToothKeys2)
     {
         if (mbBlueToothKeys2 != null && mbBlueToothKeys2.size() > 0)
         {
@@ -124,7 +123,7 @@ public class KeysSelectDialog extends AlertDialog
 
     public interface OnKeySelectedListener
     {
-        public void OnKeySelected(BlueToothKey blueToothKey);
+        public void OnKeySelected(BluetoothDevice blueToothKey);
     }
 
 }

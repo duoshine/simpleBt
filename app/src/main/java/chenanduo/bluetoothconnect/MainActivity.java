@@ -3,6 +3,7 @@ package chenanduo.bluetoothconnect;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -19,7 +20,6 @@ import android.widget.Toast;
 
 import java.util.List;
 
-import chenanduo.bluetoothconnect.bluetooth.BlueToothKey;
 import chenanduo.bluetoothconnect.bluetooth.BluetoothLeClass;
 import chenanduo.bluetoothconnect.bluetooth.KeysSelectDialog;
 
@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
 
             //扫描回调  集合就是扫描到的附近的设备
             @Override
-            public void onBleScanResult(List<BlueToothKey> device) {
+            public void onBleScanResult(List<BluetoothDevice> device) {
                 if (keysSelectDialog.isShowing()) {
                     keysSelectDialog.notifyDataSetChanged(device);
                 }
@@ -204,11 +204,11 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
 
     //点击设备开始连接
     @Override
-    public void OnKeySelected(BlueToothKey blueToothKey) {
+    public void OnKeySelected(BluetoothDevice blueToothKey) {
         //记录当前连接的蓝牙设备名称
-        currentConnectBle = blueToothKey.device.getName();
+        currentConnectBle = blueToothKey.getName();
         //连接蓝牙
-        mBLE.connect(blueToothKey.device.getAddress());
+        mBLE.connect(blueToothKey.getAddress());
         mName.setText("正在连接:" + currentConnectBle);
         //隐藏dialog
         keysSelectDialog.dismiss();
