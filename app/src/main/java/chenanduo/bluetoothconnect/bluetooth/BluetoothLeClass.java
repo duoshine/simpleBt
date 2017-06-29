@@ -19,7 +19,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
-
+/**
+ * Created by chen on 5/28/17.
+ */
 
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class BluetoothLeClass implements LeScanCallback {
@@ -55,7 +57,7 @@ public class BluetoothLeClass implements LeScanCallback {
     private static Context mContext;
 
     //存放扫描到的设备
-    private static List<BluetoothDevice> mbBlueToothKeys;
+    private static List<BluetoothDevice> mBlueTooths;
 
     //用来判断集合中是否已经有重复蓝牙设备
     boolean exist = false;
@@ -83,7 +85,7 @@ public class BluetoothLeClass implements LeScanCallback {
         if (mBLE == null) {
             mContext = context;
             mBLE = new BluetoothLeClass(mContext);
-            mbBlueToothKeys = new ArrayList<>();
+            mBlueTooths = new ArrayList<>();
             SERVICE_UUID = serviceuuid;
             NOTIFI_UUID = notifiuuid;
             WRITE_UUID = writeuuid;
@@ -350,9 +352,8 @@ public class BluetoothLeClass implements LeScanCallback {
         //五秒后停止扫描
         if (enable) {
             //开始扫描前清空集合 并停止上一次扫描
-            mbBlueToothKeys.clear();
+            mBlueTooths.clear();
             stopScanDevices();
-            // Stops scanning after a pre-defined scan period.
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -375,10 +376,10 @@ public class BluetoothLeClass implements LeScanCallback {
 
     /*
      *停止扫描设备
-     * @param mLeScanCallback
+     *
      */
     public void stopScanDevices() {
-        //释放建立连接请求，然后处理下一个设备连接请求
+        //如果当前有设备正在连接的话 先断开连接
         disconnect();
         if (mScanning) {
             mBluetoothAdapter.stopLeScan(BluetoothLeClass.this);
@@ -412,8 +413,8 @@ public class BluetoothLeClass implements LeScanCallback {
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
         //根据mac地质判断扫描到的设备是否已经存在集合中了
-        for (int i = 0; i < mbBlueToothKeys.size(); i++) {
-            if (mbBlueToothKeys.get(i).getAddress().equals(
+        for (int i = 0; i < mBlueTooths.size(); i++) {
+            if (mBlueTooths.get(i).getAddress().equals(
                     device.getAddress())) {
                 exist = true;
                 break;
@@ -421,10 +422,10 @@ public class BluetoothLeClass implements LeScanCallback {
         }
         //如果不存在 就放进集合中
         if (!exist) {
-            mbBlueToothKeys.add(device);
+            mBlueTooths.add(device);
         }
         if (mBluetoothChangeListener != null) {
-            mBluetoothChangeListener.onBleScanResult(mbBlueToothKeys);
+            mBluetoothChangeListener.onBleScanResult(mBlueTooths);
         }
         exist = false;
     }

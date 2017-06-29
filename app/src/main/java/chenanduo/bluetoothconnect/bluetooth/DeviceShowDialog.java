@@ -19,7 +19,9 @@ import java.util.List;
 
 import chenanduo.bluetoothconnect.R;
 import chenanduo.bluetoothconnect.adapter.BlueToothAdapter;
-
+/**
+ * Created by chen on 5/28/17.
+ */
 
 public class DeviceShowDialog extends AlertDialog
 {
