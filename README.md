@@ -1,8 +1,11 @@
 # BlueToothConnect-使用
 #### 一:拷出我Demo中的BluetoothLeClass,我已经将所有操作都封装在该类中--单一职责。
 #### 二:初始化
-    //第一个参数是上下文 第二三四是uuid(service notifi write) 第五个参数是设置扫描蓝牙设备时间  扫描蓝牙设备非常消耗性能的一个工作,建议时间设置短一点
-    BluetoothLeClass mBLE = BluetoothLeClass.getInstane(MainActivity.this, "", "", "", 5000);
+    //第一个参数是上下文 第二三四是uuid(service notifi write) 
+    BluetoothLeClass mBLE = BluetoothLeClass.getInstane(MainActivity.this, "", "", "")
+    //扫描时间默认5秒 可以自定义   扫描蓝牙设备非常消耗性能的一个工作,建议时间设置短一点
+    BluetoothLeClass mBLE = BluetoothLeClass.getInstane(MainActivity.this, "", "", "")
+    .setScanTime(5000);
 #### 三:当然要判断一下设备是否支持ble(Android4.3，蓝牙4.0)
      //判断是否支持BLE
         if (!getPackageManager().hasSystemFeature(
@@ -49,7 +52,7 @@
             mBLE.close();
             mBLE = null;
         }
-#### 十:回调处理都已在主线程执行，状态码
+#### 十:回调处理都已在主线程执行，
      // 设备连接断开
     public static final int STATE_DISCONNECTED = 0;
     // 设备正在扫描
@@ -64,7 +67,7 @@
     private int connectionState = STATE_DISCONNECTED;
 
 
-
+工具类是单例的，主要为了方便可能多个页面需要蓝牙操作
 
 
 
