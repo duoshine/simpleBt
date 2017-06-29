@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2013 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package chenanduo.bluetoothconnect.bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
@@ -29,9 +13,7 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Looper;
 import android.support.annotation.RequiresApi;
-import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -39,15 +21,12 @@ import java.util.List;
 import java.util.UUID;
 
 
-/**
- * Service for managing connection and data communication with a GATT server
- * hosted on a given Bluetooth LE device.
- */
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class BluetoothLeClass implements LeScanCallback {
 
     private static BluetoothLeClass mBLE;
     private final static String TAG = "BluetoothLeClass";
+    //uuid 由构造函数传入
     private static String SERVICE_UUID;
     private static String NOTIFI_UUID;
     private static String WRITE_UUID;
@@ -57,9 +36,9 @@ public class BluetoothLeClass implements LeScanCallback {
     public BluetoothGatt mBluetoothGatt;
     //扫描时间
     private static long SCAN_PERIOD = 5000;
+    //是否在扫描
     private boolean mScanning = false;
     private Handler mHandler = new Handler();
-
     // 设备连接断开
     public static final int STATE_DISCONNECTED = 0;
     // 设备正在扫描
@@ -112,15 +91,15 @@ public class BluetoothLeClass implements LeScanCallback {
         return mBLE;
     }
 
+    //设置扫描时间 不设置默认5秒
     public BluetoothLeClass setScanTime(int time) {
         SCAN_PERIOD = time;
         return mBLE;
     }
 
-    // Implements callback methods for GATT event s that the app cares about.
-    // For
-    // example,
-    // connection change and services discovered.
+    /**
+     * 通过实现此callBack管理和Ble交互
+     */
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         /**
          * 蓝牙连接状态
@@ -130,13 +109,12 @@ public class BluetoothLeClass implements LeScanCallback {
          */
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            Log.i(TAG, "onConnectionStateChange:" + newState + "");
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 /**
                  搜索连接设备所支持的service  需要连接上才可以 这个方法是异步操作
                  在回调函数onServicesDiscovered中得到status
                  通过判断status是否等于BluetoothGatt.GATT_SUCCESS来判断查找Service是否成功
-                 设备连接成功就开始查找该设备所有的服务 这大概有一点延迟
+                 设备连接成功就开始查找该设备所有的服务 这有一点延迟
                  */
                 gatt.discoverServices();
                 ThreadUtils.runOnUiThread(new Runnable() {
@@ -152,13 +130,11 @@ public class BluetoothLeClass implements LeScanCallback {
                         setBleCurrentState(STATE_DISCONNECTED);
                     }
                 });
-                //避免重复连接产生的Bug 还是close一下
-                close();
             }
         }
 
         /**
-         * 搜索周边服务  这个方法
+         * 搜索周边服务
          * @param gatt
          * @param status
          */
@@ -182,7 +158,7 @@ public class BluetoothLeClass implements LeScanCallback {
         }
 
         /**
-         * 发送指令成功后的回调方法
+         * 收到ble返回数据
          * @param gatt
          * @param characteristic
          */
@@ -200,7 +176,7 @@ public class BluetoothLeClass implements LeScanCallback {
         }
 
         /**
-         * 收到ble终端写入数据的回调
+         * 写入数据成功回调此方法
          * @param gatt
          * @param characteristic
          * @param status
@@ -211,7 +187,11 @@ public class BluetoothLeClass implements LeScanCallback {
         }
     };
 
+    //设置读写通道
     private void displayGattServices(List<BluetoothGattService> gattServices) {
+        if (SERVICE_UUID == null || NOTIFI_UUID == null) {
+            return;
+        }
         Iterator localIterator1 = gattServices.iterator();
         while (localIterator1.hasNext()) {
             BluetoothGattService localBluetoothGattService = (BluetoothGattService) localIterator1
@@ -253,22 +233,18 @@ public class BluetoothLeClass implements LeScanCallback {
 
     /*
      * 初始化对本地蓝牙适配器的引用 并判断蓝牙是否是开启状态
-     * Initializes a reference to the local Bluetooth adapter.
      * 如果初始化成功则返回true
-     * @return Return true if the initialization is successful.
      */
     public boolean initialize() {
         if (mBluetoothManager == null) {
             mBluetoothManager = (BluetoothManager) mContext
                     .getSystemService(Context.BLUETOOTH_SERVICE);
             if (mBluetoothManager == null) {
-                Log.e(TAG, "Unable to initialize BluetoothManager.");
                 return false;
             }
         }
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         if (mBluetoothAdapter == null) {
-            Log.e(TAG, "Unable to obtain a BluetoothAdapter.");
             return false;
         }
         if (mBluetoothAdapter.isEnabled()) {
@@ -280,20 +256,9 @@ public class BluetoothLeClass implements LeScanCallback {
 
     /*
      * 根据address连接蓝牙设备
-     * Connects to the GATT server hosted on the Bluetooth LE device.
-     *
-     * @param address
-     *            The device address of the destination device.
-     *
-     * @return Return true if the connection is initiated successfully. The
-     *         connection result is reported asynchronously through the
-     *         {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
-     *         callback.
      */
     public boolean connect(final String address) {
         if (mBluetoothAdapter == null || address == null) {
-            Log.w(TAG,
-                    "BluetoothAdapter not initialized or unspecified address.");
             return false;
         }
         stopScanDevices();
@@ -322,22 +287,18 @@ public class BluetoothLeClass implements LeScanCallback {
     }
 
     /*
-     * Disconnects an existing connection or cancel a pending connection. The
-     * disconnection result is reported asynchronously through the
-     * {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
-     * callback.
+     *取消等待连接或断开一个现有的连接  通过异步分离结果报告
      */
     public void disconnect() {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized");
             return;
         }
         mBluetoothGatt.disconnect();
     }
 
     /*
-     * After using a given BLE device, the app must call this method to ensure
-     * resources are released properly.
+     * 使用完Ble后一定要调用此方法释放资源
+     *
      */
     public void close() {
         if (mBluetoothGatt == null) {
@@ -348,30 +309,15 @@ public class BluetoothLeClass implements LeScanCallback {
     }
 
     /*
-     * Request a read on a given {@code BluetoothGattCharacteristic}. The read
-     * result is reported asynchronously through the
-     * {@code BluetoothGattCallback#onCharacteristicRead(android.bluetooth.BluetoothGatt, android.bluetooth.BluetoothGattCharacteristic, int)}
-     * callback.
-     *
-     * @param characteristic
-     *            The characteristic to read from.
-     */
-    public void readCharacteristic(BluetoothGattCharacteristic characteristic) {
-        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized");
-            Log.w(TAG, "BluetoothAdapter not initialized");
-            return;
-        }
-        mBluetoothGatt.readCharacteristic(characteristic);
-    }
-
-    /*
      * 发送指令方法
-     * * @param string
+     * @param string
      * @param uuid
      * @return
      */
     public boolean writeCharacteristic(byte[] value) {
+        if (WRITE_UUID == null) {
+            return false;
+        }
         BluetoothGattCharacteristic characteristic = null;
         if (mBluetoothGatt != null) {
             for (BluetoothGattService bluetoothGattService : mBluetoothGatt
@@ -392,20 +338,7 @@ public class BluetoothLeClass implements LeScanCallback {
         //设置数据内容
         characteristic.setValue(value);
         //往蓝牙模块写入数据
-        mBluetoothGatt.writeCharacteristic(characteristic);
-        return true;
-    }
-
-    /*
-     * Retrieves a list of supported GATT services on the connected device. This
-     * should be invoked only after {@code BluetoothGatt#discoverServices()}
-     * completes successfully.
-     * @return A {@code List} of supported services.
-     */
-    public List<BluetoothGattService> getSupportedGattServices() {
-        if (mBluetoothGatt == null)
-            return null;
-        return mBluetoothGatt.getServices();
+        return mBluetoothGatt.writeCharacteristic(characteristic);
     }
 
     /*
@@ -441,7 +374,7 @@ public class BluetoothLeClass implements LeScanCallback {
     }
 
     /*
-     *
+     *停止扫描设备
      * @param mLeScanCallback
      */
     public void stopScanDevices() {
@@ -464,7 +397,7 @@ public class BluetoothLeClass implements LeScanCallback {
     }
 
     /**
-     * 设置所有蓝牙设备连接状态回调给外部处理
+     * 所有蓝牙设备连接状态回调给调用者处理
      *
      * @param state
      */
@@ -473,10 +406,9 @@ public class BluetoothLeClass implements LeScanCallback {
         if (mBluetoothChangeListener != null) {
             mBluetoothChangeListener.onCurrentState(state);
         }
-
     }
 
-    /*扫描结果*/
+    /*扫描结果 次方法避免耗时操作*/
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
         //根据mac地质判断扫描到的设备是否已经存在集合中了
@@ -497,11 +429,7 @@ public class BluetoothLeClass implements LeScanCallback {
         exist = false;
     }
 
-    public boolean isMainThread() {
-        return Looper.getMainLooper().getThread().getId() == Thread.currentThread().getId();
-    }
-
-    //返回当前连接状态
+    //返回当前设备连接状态
     public int getBleConnectState() {
         return connectionState;
     }

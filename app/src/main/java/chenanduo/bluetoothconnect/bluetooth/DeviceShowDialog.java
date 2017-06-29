@@ -18,21 +18,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 import chenanduo.bluetoothconnect.R;
-import chenanduo.bluetoothconnect.adapter.BlueToothKeysAdapter;
+import chenanduo.bluetoothconnect.adapter.BlueToothAdapter;
 
 
-public class KeysSelectDialog extends AlertDialog
+public class DeviceShowDialog extends AlertDialog
 {
     private View view;
     private Context context;
     private DisplayMetrics displayMetrics;
     private ViewHoder layout;
     private List<BluetoothDevice> mbBlueToothKeys;
-    private BlueToothKeysAdapter mKeysAdapter;
+    private BlueToothAdapter mKeysAdapter;
     private View.OnClickListener onClickListener;
     private OnKeySelectedListener onKeySelectedListener;
 
-    public KeysSelectDialog(Context context,
+    public DeviceShowDialog(Context context,
                             View.OnClickListener onClickListener,
                             final OnKeySelectedListener onKeySelectedListener)
     {
@@ -69,7 +69,7 @@ public class KeysSelectDialog extends AlertDialog
             }
         });
         mbBlueToothKeys = new ArrayList<BluetoothDevice>();
-        mKeysAdapter = new BlueToothKeysAdapter(context, mbBlueToothKeys);
+        mKeysAdapter = new BlueToothAdapter(context, mbBlueToothKeys);
         layout.lv_keys.setAdapter(mKeysAdapter);
     }
 

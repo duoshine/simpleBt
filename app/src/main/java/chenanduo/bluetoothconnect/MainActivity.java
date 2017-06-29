@@ -21,14 +21,14 @@ import android.widget.Toast;
 import java.util.List;
 
 import chenanduo.bluetoothconnect.bluetooth.BluetoothLeClass;
-import chenanduo.bluetoothconnect.bluetooth.KeysSelectDialog;
+import chenanduo.bluetoothconnect.bluetooth.DeviceShowDialog;
 
 
-public class MainActivity extends AppCompatActivity implements KeysSelectDialog.OnKeySelectedListener, View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements DeviceShowDialog.OnKeySelectedListener, View.OnClickListener {
     private static final int REQUEST_PERMISSION_ACCESS_LOCATION = 2;
     private static final int REQUEST_ENABLE_BT = 3;
     private BluetoothLeClass mBLE;
-    private KeysSelectDialog keysSelectDialog;
+    private DeviceShowDialog keysSelectDialog;
     private Button mBtnScan;
     private TextView mName;
     private TextView tv_result;
@@ -68,7 +68,7 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
             startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
         //初始化dialog
-        keysSelectDialog = new KeysSelectDialog(MainActivity.this, this, this);
+        keysSelectDialog = new DeviceShowDialog(MainActivity.this, this, this);
 
         //6.0动态申请权限
         requestPermission();
@@ -231,7 +231,6 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
         super.onPause();
         if (mBLE != null) {
             mBLE.stopScanDevices();
-            mBLE.disconnect();
         }
     }
 

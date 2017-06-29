@@ -15,13 +15,13 @@ import java.util.List;
 import chenanduo.bluetoothconnect.R;
 
 
-public class BlueToothKeysAdapter extends BaseAdapter {
+public class BlueToothAdapter extends BaseAdapter {
     private Context context;
 
     private List<BluetoothDevice> mmBlueToothKeys;
 
-    public BlueToothKeysAdapter(Context context,
-                                List<BluetoothDevice> mBlueToothKeys) {
+    public BlueToothAdapter(Context context,
+                            List<BluetoothDevice> mBlueToothKeys) {
         this.context = context;
         this.mmBlueToothKeys = mBlueToothKeys;
     }
