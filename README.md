@@ -44,6 +44,7 @@
     mBLE.writeCharacteristic(bytes);
 #### 九:最后Destroy时
     if (mBLE != null) {
+            //断开连接
             mBLE.disconnect();
             mBLE.close();
             mBLE = null;
