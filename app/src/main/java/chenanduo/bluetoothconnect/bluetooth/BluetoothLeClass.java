@@ -100,7 +100,7 @@ public class BluetoothLeClass implements LeScanCallback {
         mContext = c;
     }
 
-    public static BluetoothLeClass getInstane(Context context, String serviceuuid, String notifiuuid, String writeuuid, long scantime) {
+    public static BluetoothLeClass getInstane(Context context, String serviceuuid, String notifiuuid, String writeuuid) {
         if (mBLE == null) {
             mContext = context;
             mBLE = new BluetoothLeClass(mContext);
@@ -108,11 +108,14 @@ public class BluetoothLeClass implements LeScanCallback {
             SERVICE_UUID = serviceuuid;
             NOTIFI_UUID = notifiuuid;
             WRITE_UUID = writeuuid;
-            SCAN_PERIOD = scantime;
         }
         return mBLE;
     }
 
+    public BluetoothLeClass setScanTime(int time) {
+        SCAN_PERIOD = time;
+        return mBLE;
+    }
     // Implements callback methods for GATT event s that the app cares about.
     // For
     // example,

@@ -60,7 +60,8 @@ public class MainActivity extends AppCompatActivity implements KeysSelectDialog.
             Toast.makeText(this, "该设备不支持BLE", Toast.LENGTH_SHORT).show();
             finish();
         }
-        mBLE = BluetoothLeClass.getInstane(MainActivity.this, "", "", "", 5000);
+        mBLE = BluetoothLeClass.getInstane(MainActivity.this, "", "", "")
+                .setScanTime(5000);
         if (!mBLE.initialize()) {
             //弹窗显示开启蓝牙
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
