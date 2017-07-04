@@ -20,7 +20,7 @@ import android.widget.Toast;
 
 import java.util.List;
 
-import chenanduo.bluetoothconnect.bluetooth.BluetoothLeClass;
+import chenanduo.bluetoothconnect.bluetooth.BluetoothBLeClass;
 import chenanduo.bluetoothconnect.bluetooth.DeviceShowDialog;
 
 /**
@@ -29,7 +29,7 @@ import chenanduo.bluetoothconnect.bluetooth.DeviceShowDialog;
 public class MainActivity extends AppCompatActivity implements DeviceShowDialog.OnKeySelectedListener, View.OnClickListener {
     private static final int REQUEST_PERMISSION_ACCESS_LOCATION = 2;
     private static final int REQUEST_ENABLE_BT = 3;
-    private BluetoothLeClass mBLE;
+    private BluetoothBLeClass mBLE;
     private DeviceShowDialog keysSelectDialog;
     private Button mBtnScan;
     private TextView mName;
@@ -62,8 +62,9 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             Toast.makeText(this, "该设备不支持BLE", Toast.LENGTH_SHORT).show();
             finish();
         }
-        mBLE = BluetoothLeClass.getInstane(MainActivity.this, "", "", "")
-                .setScanTime(5000);
+        mBLE = BluetoothBLeClass.getInstane(MainActivity.this, "", "", "")
+                .setScanTime(5000)//设置扫描时间为5秒 不设置默认5秒
+                .setAutoConnect(true);//设置断开后自动连接
         if (!mBLE.initialize()) {
             //弹窗显示开启蓝牙
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -77,7 +78,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
         /**
          * 蓝牙连接状态
          */
-        mBLE.getBleCurrentState(new BluetoothLeClass.BluetoothChangeListener() {
+        mBLE.getBleCurrentState(new BluetoothBLeClass.BluetoothChangeListener() {
             //蓝牙连接状态
             @Override
             public void onCurrentState(int state) {
@@ -113,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     /*和蓝牙设备交互的状态*/
     private void bleCurrentState(int state) {
         // 设备连接成功
-        if (state == BluetoothLeClass.STATE_CONNECTED) {
+        if (state == BluetoothBLeClass.STATE_CONNECTED) {
             System.out.println("状态:连接成功");
             /*隐藏连接进度*/
             hiedDialog();
@@ -122,17 +123,17 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             } else {
                 mName.setText("连接到设备:--");
             }
-        } else if (state == BluetoothLeClass.STATE_DISCONNECTED) { //设备连接断开
+        } else if (state == BluetoothBLeClass.STATE_DISCONNECTED) { //设备连接断开
             System.out.println("状态:连接断开");
             if (!TextUtils.isEmpty(currentConnectBle)) {
                 Toast.makeText(MainActivity.this, "设备" + currentConnectBle + "已断开连接", Toast.LENGTH_SHORT).show();
             }
             mName.setText("没有连接设备");
-        } else if (state == BluetoothLeClass.STATE_SCANNING) {
+        } else if (state == BluetoothBLeClass.STATE_SCANNING) {
             System.out.println("状态:正在扫描");
-        } else if (state == BluetoothLeClass.STATE_SCANNED) {
+        } else if (state == BluetoothBLeClass.STATE_SCANNED) {
             System.out.println("状态:扫描结束");
-        } else if (state == BluetoothLeClass.STATE_CONNECTING) {
+        } else if (state == BluetoothBLeClass.STATE_CONNECTING) {
             System.out.println("状态:正在连接");
         }
     }
