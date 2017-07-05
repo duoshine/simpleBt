@@ -6,7 +6,8 @@
     //的应用场景是用户主动断开,那么你需要决定是否开启此功能,
     BluetoothLeClass mBLE = BluetoothLeClass.getInstane(MainActivity.this, "", "", "")
     .setScanTime(5000)
-    .setAutoConnect(true);//设置断开后自动连接
+    .setAutoConnect(true)//设置断开后自动连接
+    .closeCleanCache(true);//设置每次断开连接都清除缓存 无特殊情况 不建议开启
 #### 三:当然要判断一下设备是否支持ble(Android4.3，蓝牙4.0)
      //判断是否支持BLE
         if (!getPackageManager().hasSystemFeature(
