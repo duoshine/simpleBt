@@ -9,11 +9,10 @@
     .setAutoConnect(true)//设置断开后自动连接
     .closeCleanCache(true);//设置每次断开连接都清除缓存 无特殊情况 不建议开启
 #### 三:当然要判断一下设备是否支持ble(Android4.3，蓝牙4.0)
-     //判断是否支持BLE
-        if (!getPackageManager().hasSystemFeature(
-                PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Toast.makeText(this, "该设备不支持BLE", Toast.LENGTH_SHORT).show();
-            finish();
+    if (!mBLE.initialize()) {
+        //弹窗显示开启蓝牙
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 #### 四:6.0设备需要申请下定位权限，不然找不到蓝牙设备，部分机型可能没有弹窗申请，手动开启gps即可
 #### 五:设置和蓝牙交互的状态接收回调，有三个方法
