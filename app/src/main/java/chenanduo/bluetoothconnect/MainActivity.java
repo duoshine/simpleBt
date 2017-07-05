@@ -56,19 +56,14 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     }
 
     private void init() {
-        //判断是否支持BLE
-        if (!getPackageManager().hasSystemFeature(
-                PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Toast.makeText(this, "该设备不支持BLE", Toast.LENGTH_SHORT).show();
-            finish();
-        }
         mBLE = BluetoothBLeClass.getInstane(MainActivity.this, "", "", "")
                 .setScanTime(5000)//设置扫描时间为5秒 不设置默认5秒
-                .setAutoConnect(true);//设置断开后自动连接
+                .setAutoConnect(true)//设置断开后自动连接
+                .closeCleanCache(true);//设置每次断开连接都清除缓存
         if (!mBLE.initialize()) {
-            //弹窗显示开启蓝牙
-            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+        //弹窗显示开启蓝牙
+        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
         //初始化dialog
         keysSelectDialog = new DeviceShowDialog(MainActivity.this, this, this);
@@ -135,6 +130,9 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             System.out.println("状态:扫描结束");
         } else if (state == BluetoothBLeClass.STATE_CONNECTING) {
             System.out.println("状态:正在连接");
+        } else if (state == BluetoothBLeClass.STATE_RESETCONNECT) {
+            System.out.println("状态:正在尝试重连中");
+            mName.setText("正在尝试重连中");
         }
     }
 

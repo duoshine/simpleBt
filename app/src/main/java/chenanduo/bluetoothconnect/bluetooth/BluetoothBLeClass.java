@@ -11,11 +11,14 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
+import android.widget.Toast;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -55,6 +58,8 @@ public class BluetoothBLeClass implements LeScanCallback {
     public static final int STATE_CONNECTING = 3;
     // 设备连接成功
     public static final int STATE_CONNECTED = 4;
+    // 正在尝试重连
+    public static final int STATE_RESETCONNECT = 5;
     // 当前设备状态
     private int connectionState = STATE_DISCONNECTED;
     //设置自动重连
@@ -68,6 +73,8 @@ public class BluetoothBLeClass implements LeScanCallback {
     private static List<BluetoothDevice> mBlueTooths;
     //用来判断集合中是否已经有重复蓝牙设备
     boolean exist = false;
+    //每次断开连接是否清除缓存
+    public static boolean isCloseCleanCache = false;
 
     /*回调设备的连接状态等信息*/
     public interface BluetoothChangeListener {
@@ -113,6 +120,12 @@ public class BluetoothBLeClass implements LeScanCallback {
         return mBLE;
     }
 
+    //设置每次断开连接都清除缓存
+    public BluetoothBLeClass closeCleanCache(boolean isCloseCleanCache) {
+        this.isCloseCleanCache = isCloseCleanCache;
+        return mBLE;
+    }
+
     /**
      * 通过实现此callBack管理和Ble交互
      */
@@ -126,8 +139,10 @@ public class BluetoothBLeClass implements LeScanCallback {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
+                //连接上蓝牙设备
                 initConnected(gatt);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                //断开蓝牙连接
                 initDisconnected();
             }
         }
@@ -196,27 +211,23 @@ public class BluetoothBLeClass implements LeScanCallback {
          */
         gatt.discoverServices();
         isBleConnect = true;
-        ThreadUtils.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                setBleCurrentState(STATE_CONNECTED);
-            }
-        });
+        runonUiThread(STATE_CONNECTED);
     }
 
     /*处理断开连接的逻辑*/
     private void initDisconnected() {
         isBleConnect = false;
-        ThreadUtils.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                setBleCurrentState(STATE_DISCONNECTED);
-            }
-        });
+        runonUiThread(STATE_DISCONNECTED);
+        //判断用户是否开启了每次断开连接都清除缓存
+        if (isCloseCleanCache) {
+            refreshDeviceCache();
+        }
         //如果用户开启自动重连 且蓝牙是断开连接状态会走进去
         if (isAutoConnect && !isBleConnect) {
-            //开启定时器 每五秒重连一次蓝牙设备
-            mTimer = new Timer();
+            //开启定时器 每五秒重连一次蓝牙设备  必须判断是否为Null  不然会创建多个定时器 导致无法停止
+            if (mTimer == null) {
+                mTimer = new Timer();
+            }
             mTimer.schedule(new TimerTask() {
                 @Override
                 public void run() {
@@ -228,12 +239,14 @@ public class BluetoothBLeClass implements LeScanCallback {
                             mTimer = null;
                         }
                     } else {
+                        //设置状态正在尝试重连
+                        runonUiThread(STATE_RESETCONNECT);
                         Log.d(TAG, "run : " + "正在尝试重连");
                         //连接蓝牙
                         connect(mBluetoothDeviceAddress);
                     }
                 }
-            }, 0, 5000);
+            }, 20, 5000);
         }
     }
 
@@ -287,6 +300,12 @@ public class BluetoothBLeClass implements LeScanCallback {
      * 如果初始化成功则返回true
      */
     public boolean initialize() {
+        if (!mContext.getPackageManager().hasSystemFeature(
+                PackageManager.FEATURE_BLUETOOTH_LE)) {
+            Toast.makeText(mContext, "该设备不支持BLE", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+
         if (mBluetoothManager == null) {
             mBluetoothManager = (BluetoothManager) mContext
                     .getSystemService(Context.BLUETOOTH_SERVICE);
@@ -298,6 +317,7 @@ public class BluetoothBLeClass implements LeScanCallback {
         if (mBluetoothAdapter == null) {
             return false;
         }
+        //判断是否开启蓝牙  如果没有开启 弹窗提示用户开启蓝牙
         if (mBluetoothAdapter.isEnabled()) {
             return true;
         } else {
@@ -338,7 +358,7 @@ public class BluetoothBLeClass implements LeScanCallback {
     }
 
     /*
-     *取消等待连接或断开一个现有的连接  通过异步分离结果报告
+     *取消等待连接或断开一个现有的连接
      */
     public void disconnect() {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
@@ -352,19 +372,18 @@ public class BluetoothBLeClass implements LeScanCallback {
      *
      */
     public void close() {
+        isAutoConnect = false;
+        isBleConnect = false;
         if (mTimer != null) {
             Log.d(TAG, "close : " + "应用销毁 停止计时器");
             mTimer.cancel();
             mTimer = null;
-            isAutoConnect = false;
-            isBleConnect = false;
         }
         if (mBluetoothGatt == null) {
             return;
         }
         mBluetoothGatt.close();
         mBluetoothGatt = null;
-
     }
 
     /*
@@ -466,7 +485,7 @@ public class BluetoothBLeClass implements LeScanCallback {
         }
     }
 
-    /*扫描结果 次方法避免耗时操作*/
+    /*扫描结果  此方法避免耗时操作*/
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
         //根据mac地质判断扫描到的设备是否已经存在集合中了
@@ -490,5 +509,35 @@ public class BluetoothBLeClass implements LeScanCallback {
     //返回当前设备连接状态
     public int getBleConnectState() {
         return connectionState;
+    }
+
+    //清除缓存
+    public boolean refreshDeviceCache() {
+        if (mBluetoothGatt != null) {
+            try {
+                BluetoothGatt localBluetoothGatt = mBluetoothGatt;
+                Method localMethod = localBluetoothGatt
+                        .getClass()
+                        .getMethod("refresh", new Class[0]);
+                if (localMethod != null) {
+                    boolean bool = ((Boolean) localMethod.invoke(localBluetoothGatt,
+                            new Object[0])).booleanValue();
+                    return bool;
+                }
+            } catch (Exception localException) {
+                Log.i(TAG, "Exception localException:" + localException.getMessage());
+            }
+        }
+        return false;
+    }
+
+    //将子线程设置的状态处理到主线程
+    private void runonUiThread(final int state) {
+        ThreadUtils.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                setBleCurrentState(state);
+            }
+        });
     }
 }
