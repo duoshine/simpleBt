@@ -1,11 +1,12 @@
 # BlueToothConnect-使用
-#### 一:拷出我Demo中的BluetoothLeClass,我已经将所有操作都封装在该类中--单一职责。
+#### 一:拷出我Demo中的BluetoothBLeClass,我已经将所有操作都封装在该类中--单一职责。
 #### 二:初始化
-    //第一个参数是上下文 第二三四是uuid(service notifi write) 
+    //第一个参数是上下文 第二三四是uuid(service notifi write) 扫描时间默认5秒 可以自定义  
+    //扫描蓝牙设备非常消耗性能的一个工作,建议时间设置短一点 可以设置断开后自动重连,这个要看应用场景,如果你
+    //的应用场景是用户主动断开,那么你需要决定是否开启此功能,
     BluetoothLeClass mBLE = BluetoothLeClass.getInstane(MainActivity.this, "", "", "")
-    //扫描时间默认5秒 可以自定义   扫描蓝牙设备非常消耗性能的一个工作,建议时间设置短一点
-    BluetoothLeClass mBLE = BluetoothLeClass.getInstane(MainActivity.this, "", "", "")
-    .setScanTime(5000);
+    .setScanTime(5000)
+    .setAutoConnect(true);//设置断开后自动连接
 #### 三:当然要判断一下设备是否支持ble(Android4.3，蓝牙4.0)
      //判断是否支持BLE
         if (!getPackageManager().hasSystemFeature(
