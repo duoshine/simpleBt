@@ -54,7 +54,7 @@
             mBLE = null;
         }
 #### 十:回调处理都已在主线程执行，
-   // 设备连接断开
+    // 设备连接断开
     public static final int STATE_DISCONNECTED = 0;
     // 设备正在扫描
     public static final int STATE_SCANNING = 1;
