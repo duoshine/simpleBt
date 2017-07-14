@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import chenanduo.bluetoothconnect.R;
-import chenanduo.bluetoothconnect.adapter.BlueToothAdapter;
+import chenanduo.bluetoothconnect.adapter.BLEAdapter;
 /**
  * Created by chen on 5/28/17.
  */
@@ -30,7 +30,7 @@ public class DeviceShowDialog extends AlertDialog
     private DisplayMetrics displayMetrics;
     private ViewHoder layout;
     private List<BluetoothDevice> mbBlueToothKeys;
-    private BlueToothAdapter mKeysAdapter;
+    private BLEAdapter mKeysAdapter;
     private View.OnClickListener onClickListener;
     private OnKeySelectedListener onKeySelectedListener;
 
@@ -71,7 +71,7 @@ public class DeviceShowDialog extends AlertDialog
             }
         });
         mbBlueToothKeys = new ArrayList<BluetoothDevice>();
-        mKeysAdapter = new BlueToothAdapter(context, mbBlueToothKeys);
+        mKeysAdapter = new BLEAdapter(context, mbBlueToothKeys);
         layout.lv_keys.setAdapter(mKeysAdapter);
     }
 

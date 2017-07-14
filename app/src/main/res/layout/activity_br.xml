@@ -2,8 +2,36 @@
               xmlns:tools="http://schemas.android.com/tools"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:orientation="vertical"
-    >
+              android:orientation="vertical">
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:text="已配对"
+        android:textColor="#FF0000"/>
 
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/bondDevices"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#9c9c9c"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:text="扫描"
+        android:textColor="#FF0000"/>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/RecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
 </LinearLayout>

@@ -20,10 +20,10 @@ import android.widget.Toast;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.UUID;
 
 /**
  * Created by chen on 5/28/17.
@@ -75,6 +75,7 @@ public class BluetoothBLeClass implements LeScanCallback {
     boolean exist = false;
     //每次断开连接是否清除缓存
     public static boolean isCloseCleanCache = false;
+    private BluetoothGattCharacteristic mWriteCharacteristic;
 
     /*回调设备的连接状态等信息*/
     public interface BluetoothChangeListener {
@@ -155,7 +156,7 @@ public class BluetoothBLeClass implements LeScanCallback {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                displayGattServices(gatt.getServices());
+                displayGattServices(gatt);
             }
         }
 
@@ -200,6 +201,26 @@ public class BluetoothBLeClass implements LeScanCallback {
 
         }
     };
+
+    /*用于测试使用直接使用Uuid获取通知和写*/
+    private void displayGattServices(BluetoothGatt gatt) {
+        if (SERVICE_UUID == null || NOTIFI_UUID == null || WRITE_UUID == null) {
+            return;
+        }
+        BluetoothGattService service = gatt.getService(UUID.fromString(SERVICE_UUID));
+        if (service == null) {
+            return;
+        }
+        BluetoothGattCharacteristic notifiCharacteristic = service.getCharacteristic(UUID.fromString(NOTIFI_UUID));
+        if (notifiCharacteristic == null) {
+            return;
+        }
+        mBluetoothGatt.setCharacteristicNotification(notifiCharacteristic, true);
+        BluetoothGattDescriptor descriptor = notifiCharacteristic.getDescriptor(UUID.fromString(DISENABLE));
+        descriptor.setValue(new byte[]{0x01});
+        mBluetoothGatt.writeDescriptor(descriptor);
+        mWriteCharacteristic = service.getCharacteristic(UUID.fromString(WRITE_UUID));
+    }
 
     /*处理连接上蓝牙设备的逻辑*/
     private void initConnected(BluetoothGatt gatt) {
@@ -247,51 +268,6 @@ public class BluetoothBLeClass implements LeScanCallback {
                     }
                 }
             }, 20, 5000);
-        }
-    }
-
-    //设置读写通道
-    private void displayGattServices(List<BluetoothGattService> gattServices) {
-        if (SERVICE_UUID == null || NOTIFI_UUID == null) {
-            return;
-        }
-        Iterator localIterator1 = gattServices.iterator();
-        while (localIterator1.hasNext()) {
-            BluetoothGattService localBluetoothGattService = (BluetoothGattService) localIterator1
-                    .next();
-            if (localBluetoothGattService.getUuid().toString().equalsIgnoreCase(SERVICE_UUID)) {
-                List localList = localBluetoothGattService.getCharacteristics();
-                Iterator localIterator2 = localList.iterator();
-                while (localIterator2.hasNext()) {
-                    BluetoothGattCharacteristic localBluetoothGattCharacteristic = (BluetoothGattCharacteristic)
-                            localIterator2.next();
-                    if (localBluetoothGattCharacteristic.getUuid().toString().equalsIgnoreCase(NOTIFI_UUID)) {
-                        mBluetoothGatt.setCharacteristicNotification(localBluetoothGattCharacteristic, true);
-
-                        //notifiction默认是关闭的  需要设置0x01打开
-                        List<BluetoothGattDescriptor> descriptors = localBluetoothGattCharacteristic.getDescriptors();
-                        for (int i = 0; i < descriptors.size(); i++) {
-                            if (descriptors.get(i).getUuid().toString().equalsIgnoreCase(DISENABLE)) {
-                                BluetoothGattDescriptor bluetoothGattDescriptor = descriptors.get(i);
-                                bluetoothGattDescriptor.setValue(new byte[]{0x01});
-                                mBluetoothGatt.writeDescriptor(bluetoothGattDescriptor);
-                            }
-                        }
-             /*           BluetoothGattDescriptor descriptor = localBluetoothGattCharacteristic
-                                .getDescriptor(UUID.fromString(NOTIFI_UUID));
-                        if (descriptor == null) {
-                            descriptor = new BluetoothGattDescriptor(
-                                    UUID.fromString(NOTIFI_UUID),
-                                    BluetoothGattDescriptor.PERMISSION_WRITE);
-                        }
-                        descriptor
-                                .setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                        mBluetoothGatt.writeDescriptor(descriptor);*/
-                        break;
-                    }
-                }
-                break;
-            }
         }
     }
 
@@ -393,30 +369,15 @@ public class BluetoothBLeClass implements LeScanCallback {
      * @return
      */
     public boolean writeCharacteristic(byte[] value) {
-        if (WRITE_UUID == null) {
+        if (value == null) {
             return false;
         }
-        BluetoothGattCharacteristic characteristic = null;
-        if (mBluetoothGatt != null) {
-            for (BluetoothGattService bluetoothGattService : mBluetoothGatt
-                    .getServices()) {
-                for (BluetoothGattCharacteristic bluetoothGattCharacteristics : bluetoothGattService
-                        .getCharacteristics()) {
-                    if (WRITE_UUID.equalsIgnoreCase(bluetoothGattCharacteristics.getUuid().toString())) {
-                        characteristic = bluetoothGattCharacteristics;
-                        //this.setCharacteristicNotification(characteristic, true);
-                        break;
-                    }
-                }
-            }
-        }
-        if (characteristic == null) {
-            return false;
-        }
+        //TODO 待测试 数据大于20字节 可以自动分包
+        //characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
         //设置数据内容
-        characteristic.setValue(value);
+        mWriteCharacteristic.setValue(value);
         //往蓝牙模块写入数据
-        return mBluetoothGatt.writeCharacteristic(characteristic);
+        return mBluetoothGatt.writeCharacteristic(mWriteCharacteristic);
     }
 
     /*
