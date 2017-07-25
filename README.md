@@ -1,12 +1,14 @@
 # BlueToothConnect-使用
-#### 二:项目根 build.gradle 添加
+#### 一:项目根 build.gradle 添加
+
 	allprojects {
 		repositories {
 			...
 			maven { url 'https://www.jitpack.io' }
 		}
 	}
-	app的 build.gradle添加
+app的 build.gradle添加
+
 	dependencies {
 	        compile 'com.github.duoshine:simpleBt:1.0.1'
 	}
