@@ -1,17 +1,5 @@
 # BlueToothConnect-使用
-一:在项目根目录的build.gradle添加
-
-	allprojects {
-			repositories {
-			...
-			maven { url 'https://www.jitpack.io' }
-		}
-	}
-    在app的build.gradle添加依赖
-    
-    	dependencies {
-	        compile 'com.github.duoshine:simpleBt:1.0.0'
-	}
+一:拷贝我demo中的BluetoothBLeClass类直接使用
 	
 #### 二:初始化
     //第一个参数是上下文 第二三四是uuid(service notifi write) 扫描时间默认5秒 可以自定义  
