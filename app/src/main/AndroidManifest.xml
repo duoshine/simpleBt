@@ -29,7 +29,6 @@
                  <category android:name="android.intent.category.LAUNCHER"/>
              </intent-filter>
         </activity>
-        <!--经典蓝牙-->
         <activity android:name=".BTActivity">
         <!--    <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>

@@ -58,7 +58,7 @@ public class BTActivity extends AppCompatActivity {
                     mAdapter.notifyDataSetChanged();
                 }
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
-                setProgressBarIndeterminateVisibility(false);
+//                setProgressBarIndeterminateVisibility(false);
                 Log.d(TAG, "onReceive : " + "扫描完成");
                 setTitle("选择连接的设备");
             }

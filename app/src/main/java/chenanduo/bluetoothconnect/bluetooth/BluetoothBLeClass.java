@@ -160,6 +160,12 @@ public class BluetoothBLeClass implements LeScanCallback {
             }
         }
 
+        @Override
+        public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+            super.onMtuChanged(gatt, mtu, status);
+
+        }
+
         /**
          * ble终端数据交互的事件
          * @param gatt
@@ -245,7 +251,7 @@ public class BluetoothBLeClass implements LeScanCallback {
         }
         //如果用户开启自动重连 且蓝牙是断开连接状态会走进去
         if (isAutoConnect && !isBleConnect) {
-            //开启定时器 每五秒重连一次蓝牙设备  必须判断是否为Null  不然会创建多个定时器 导致无法停止
+            //开启定时器 每五秒重连一次蓝牙设备  必须判断是否为Null  始终保证只有一个定时器对象
             if (mTimer == null) {
                 mTimer = new Timer();
             }
