@@ -1,6 +1,17 @@
 # BlueToothConnect-使用
-一:拷贝我demo中的BluetoothBLeClass类直接使用
-	
+#### 二:项目根 build.gradle 添加
+	allprojects {
+		repositories {
+			...
+			maven { url 'https://www.jitpack.io' }
+		}
+	}
+	app的 build.gradle添加
+	dependencies {
+	        compile 'com.github.duoshine:simpleBt:1.0.1'
+	}
+
+
 #### 二:初始化
     //第一个参数是上下文 第二三四是uuid(service notifi write) 扫描时间默认5秒 可以自定义  
     //扫描蓝牙设备非常消耗性能的一个工作,建议时间设置短一点 可以设置断开后自动重连,这个要看应用场景,如果你
