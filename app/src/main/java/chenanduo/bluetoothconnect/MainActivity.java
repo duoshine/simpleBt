@@ -24,7 +24,7 @@ import chenanduo.bluetoothconnect.bluetooth.BluetoothBLeClass;
 import chenanduo.bluetoothconnect.bluetooth.DeviceShowDialog;
 
 /**
- * Created by chen on 5/25/17...
+ * Created by chen on 5/25/17.
  */
 public class MainActivity extends AppCompatActivity implements DeviceShowDialog.OnKeySelectedListener, View.OnClickListener {
     private static final int REQUEST_PERMISSION_ACCESS_LOCATION = 2;
