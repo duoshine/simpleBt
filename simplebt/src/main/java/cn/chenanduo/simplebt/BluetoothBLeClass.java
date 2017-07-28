@@ -471,6 +471,7 @@ public class BluetoothBLeClass implements LeScanCallback {
             mBluetoothChangeListener.onBleScanResult(mBlueTooths);
         }
         exist = false;
+
     }
 
     //返回当前设备连接状态
