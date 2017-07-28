@@ -375,7 +375,7 @@ public class BluetoothBLeClass implements LeScanCallback {
      * @return
      */
     public boolean writeCharacteristic(byte[] value) {
-        if (value == null) {
+        if (value == null || mWriteCharacteristic == null) {
             return false;
         }
         //TODO 待测试 数据大于20字节 可以自动分包
