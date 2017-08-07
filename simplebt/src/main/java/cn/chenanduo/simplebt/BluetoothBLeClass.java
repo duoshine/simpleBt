@@ -270,7 +270,12 @@ public class BluetoothBLeClass implements LeScanCallback {
                         runonUiThread(STATE_RESETCONNECT);
                         Log.d(TAG, "run : " + "正在尝试重连");
                         //连接蓝牙
-                        connect(mBluetoothDeviceAddress);
+                        ThreadUtils.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                connect(mBluetoothDeviceAddress);
+                            }
+                        });
                     }
                 }
             }, 20, 5000);
@@ -467,7 +472,7 @@ public class BluetoothBLeClass implements LeScanCallback {
         if (!exist) {
             mBlueTooths.add(device);
         }
-        if (mBluetoothChangeListener != null && !exist) {
+        if (mBluetoothChangeListener != null) {
             mBluetoothChangeListener.onBleScanResult(mBlueTooths);
         }
         exist = false;
