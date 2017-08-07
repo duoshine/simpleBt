@@ -512,4 +512,8 @@ public class BluetoothBLeClass implements LeScanCallback {
             }
         });
     }
+
+    public void ceshi() {
+
+    }
 }
