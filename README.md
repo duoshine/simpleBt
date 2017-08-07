@@ -30,11 +30,11 @@ app的 build.gradle添加
         }
 #### 四:6.0设备需要申请下定位权限，不然找不到蓝牙设备，部分机型可能没有弹窗申请，手动开启gps即可
 #### 五:设置和蓝牙交互的状态接收回调，有三个方法
-    mBLE.getBleCurrentState(new BluetoothLeClass.BluetoothChangeListener() {
+     mBLe.getBleCurrentState(new BluetoothBLeClass.BluetoothChangeListener() {
             //蓝牙连接状态
             @Override
             public void onCurrentState(int state) {
-                
+
             }
 
             //收到蓝牙设备返回的数据
@@ -43,10 +43,9 @@ app的 build.gradle添加
 
             }
 
-            //扫描回调  集合就是扫描到的附近的设备
             @Override
-            public void onBleScanResult(List<BlueToothKey> device) {
-                
+            public void onBleScanResult(List<BluetoothDevice> list) {
+
             }
         });
 #### 六:开始扫描/停止扫描
