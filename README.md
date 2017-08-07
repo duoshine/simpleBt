@@ -10,7 +10,7 @@
 app的 build.gradle添加
 
 	dependencies {
-	        compile 'com.github.duoshine:simpleBt:1.0.5'
+	       compile 'com.github.duoshine:simpleBt:2.0'
 	}
 
 
