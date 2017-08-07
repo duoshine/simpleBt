@@ -10,7 +10,7 @@
 app的 build.gradle添加
 
 	dependencies {
-	         compile 'com.github.duoshine:simpleBt:1.0.3'
+	        compile 'com.github.duoshine:simpleBt:1.0.5'
 	}
 
 
@@ -18,7 +18,7 @@ app的 build.gradle添加
     //第一个参数是上下文 第二三四是uuid(service notifi write) 扫描时间默认5秒 可以自定义  
     //扫描蓝牙设备非常消耗性能的一个工作,建议时间设置短一点 可以设置断开后自动重连,这个要看应用场景,如果你
     //的应用场景是用户主动断开,那么你需要决定是否开启此功能,
-    BluetoothLeClass mBLE = BluetoothLeClass.getInstane(MainActivity.this, "", "", "")
+    BluetoothBLeClass mBLE = BluetoothBLeClass.getInstane(MainActivity.this, "", "", "")
     .setScanTime(5000)
     .setAutoConnect(true)//设置断开后自动连接
     .closeCleanCache(true);//设置每次断开连接都清除缓存 无特殊情况 不建议开启
@@ -30,11 +30,11 @@ app的 build.gradle添加
         }
 #### 四:6.0设备需要申请下定位权限，不然找不到蓝牙设备，部分机型可能没有弹窗申请，手动开启gps即可
 #### 五:设置和蓝牙交互的状态接收回调，有三个方法
-    mBLE.getBleCurrentState(new BluetoothLeClass.BluetoothChangeListener() {
+     mBLe.getBleCurrentState(new BluetoothBLeClass.BluetoothChangeListener() {
             //蓝牙连接状态
             @Override
             public void onCurrentState(int state) {
-                
+
             }
 
             //收到蓝牙设备返回的数据
@@ -43,10 +43,9 @@ app的 build.gradle添加
 
             }
 
-            //扫描回调  集合就是扫描到的附近的设备
             @Override
-            public void onBleScanResult(List<BlueToothKey> device) {
-                
+            public void onBleScanResult(List<BluetoothDevice> list) {
+
             }
         });
 #### 六:开始扫描/停止扫描
