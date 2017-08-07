@@ -467,11 +467,10 @@ public class BluetoothBLeClass implements LeScanCallback {
         if (!exist) {
             mBlueTooths.add(device);
         }
-        if (mBluetoothChangeListener != null) {
+        if (mBluetoothChangeListener != null && !exist) {
             mBluetoothChangeListener.onBleScanResult(mBlueTooths);
         }
         exist = false;
-
     }
 
     //返回当前设备连接状态
@@ -507,9 +506,5 @@ public class BluetoothBLeClass implements LeScanCallback {
                 setBleCurrentState(state);
             }
         });
-    }
-
-    public void ceshi() {
-        Log.d("ceshi","");
     }
 }
