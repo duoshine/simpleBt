@@ -61,8 +61,7 @@ app的 build.gradle添加
     mBLE.writeCharacteristic(bytes);
 #### 九:最后Destroy时
     if (mBLE != null) {
-            //断开连接
-            mBLE.disconnect();
+            //一定要调用 释放资源
             mBLE.close();
             mBLE = null;
         }
