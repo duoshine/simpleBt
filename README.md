@@ -1,4 +1,4 @@
-# BlueToothConnect-使用
+# simpleBt-使用
 #### 一:项目根 build.gradle 添加
 
 	allprojects {
