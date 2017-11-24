@@ -22,7 +22,7 @@ app的 build.gradle添加
     .setScanTime(5000)
     .setAutoConnect(true)//设置断开后自动连接
     .closeCleanCache(true);//设置每次断开连接都清除缓存 无特殊情况 不建议开启
-#### 三:当然要判断一下设备是否支持ble(Android4.3，蓝牙4.0)
+#### 三:当然要判断一下蓝牙是否开启
     if (!mBLE.initialize()) {
         //弹窗显示开启蓝牙 返回false则蓝牙尚未开启 返回true则蓝牙已经开启
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -31,7 +31,7 @@ app的 build.gradle添加
 #### 四:6.0设备需要申请下定位权限，不然找不到蓝牙设备，部分机型可能没有弹窗申请，手动开启gps即可
 #### 五:设置和蓝牙交互的状态接收回调，有四个方法
     	 /**
-         * 交互状态
+         * 交互状态 所有回调都已在ui线程执行
          */
         mBLE.getBleCurrentState(new BluetoothChangeListener() {
             //蓝牙连接状态
@@ -77,7 +77,7 @@ app的 build.gradle添加
             mBLE.close();
             mBLE = null;
         }
-#### 十:回调处理都已在主线程执行，
+#### 十:状态码，
     // 设备连接断开
     public static final int STATE_DISCONNECTED = 0;
     // 设备正在扫描
