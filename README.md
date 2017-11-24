@@ -17,7 +17,7 @@ app的 build.gradle添加
 #### 二:初始化
     //第一个参数是上下文 第二三四是uuid(service notifi write) 扫描时间默认5秒 可以自定义  
     //扫描蓝牙设备非常消耗性能的一个工作,建议时间设置短一点 可以设置断开后自动重连,这个要看应用场景,如果你
-    //的应用场景是用户主动断开,那么你需要决定是否开启此功能,
+    //的应用场景是用户主动断开,那么你需要决定是否开启此功能,如果返回对象为null，那么就是该手机不支持ble(低于Android4.3)
     BluetoothBLeClass mBLE = BluetoothBLeClass.getInstane(MainActivity.this, "", "", "")
     .setScanTime(5000)
     .setAutoConnect(true)//设置断开后自动连接
