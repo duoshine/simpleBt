@@ -1,4 +1,4 @@
-# BlueToothConnect-使用
+# simpleBt-使用
 #### 一:项目根 build.gradle 添加
 
 	allprojects {
@@ -10,7 +10,7 @@
 app的 build.gradle添加
 
 	dependencies {
-	        compile 'com.github.duoshine:simpleBt:1.0.5'
+	       compile 'com.github.duoshine:simpleBt:2.0'
 	}
 
 
@@ -30,11 +30,14 @@ app的 build.gradle添加
         }
 #### 四:6.0设备需要申请下定位权限，不然找不到蓝牙设备，部分机型可能没有弹窗申请，手动开启gps即可
 #### 五:设置和蓝牙交互的状态接收回调，有三个方法
-     mBLe.getBleCurrentState(new BluetoothBLeClass.BluetoothChangeListener() {
+    	 /**
+         * 交互状态
+         */
+        mBLE.getBleCurrentState(new BluetoothChangeListener() {
             //蓝牙连接状态
             @Override
             public void onCurrentState(int state) {
-
+            	//状态码在本文末.
             }
 
             //收到蓝牙设备返回的数据
@@ -43,8 +46,17 @@ app的 build.gradle添加
 
             }
 
+            //扫描回调  集合就是扫描到的附近的设备
             @Override
-            public void onBleScanResult(List<BluetoothDevice> list) {
+            public void onBleScanResult(List<BluetoothDevice> device) {
+            
+            }
+
+            /**
+             * 写入蓝牙设备成功回调(上位机发送到下位机成功,不代表数据正确和错误,不代表一定能收到回调)
+             */
+            @Override
+            public void onWriteDataSucceed() {
 
             }
         });
@@ -61,8 +73,7 @@ app的 build.gradle添加
     mBLE.writeCharacteristic(bytes);
 #### 九:最后Destroy时
     if (mBLE != null) {
-            //断开连接
-            mBLE.disconnect();
+            //一定要调用 释放资源  一定要调用 释放资源  一定要调用 释放资源
             mBLE.close();
             mBLE = null;
         }
@@ -82,7 +93,7 @@ app的 build.gradle添加
     // 当前设备状态
     private int connectionState = STATE_DISCONNECTED;
 
-
+#### 十一:工具类中测试log过滤为：simpleBtTest
 工具类是单例的，主要为了方便可能多个页面需要蓝牙操作
 
 
