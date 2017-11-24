@@ -10,37 +10,37 @@
 app的 build.gradle添加
 
 	dependencies {
-	       compile 'com.github.duoshine:simpleBt:2.0'
+	       compile 'com.github.duoshine:simpleBt:2.1.0'
 	}
 
 
 #### 二:初始化
     //第一个参数是上下文 第二三四是uuid(service notifi write) 扫描时间默认5秒 可以自定义  
     //扫描蓝牙设备非常消耗性能的一个工作,建议时间设置短一点 可以设置断开后自动重连,这个要看应用场景,如果你
-    //的应用场景是用户主动断开,那么你需要决定是否开启此功能,
+    //的应用场景是用户主动断开,那么你需要决定是否开启此功能,如果返回对象为null，那么就是该手机不支持ble(低于Android4.3)
     BluetoothBLeClass mBLE = BluetoothBLeClass.getInstane(MainActivity.this, "", "", "")
     .setScanTime(5000)
     .setAutoConnect(true)//设置断开后自动连接
     .closeCleanCache(true);//设置每次断开连接都清除缓存 无特殊情况 不建议开启
-#### 三:当然要判断一下设备是否支持ble(Android4.3，蓝牙4.0)
+#### 三:当然要判断一下蓝牙是否开启
     if (!mBLE.initialize()) {
-        //弹窗显示开启蓝牙
+        //弹窗显示开启蓝牙 返回false则蓝牙尚未开启 返回true则蓝牙已经开启
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 #### 四:6.0设备需要申请下定位权限，不然找不到蓝牙设备，部分机型可能没有弹窗申请，手动开启gps即可
-#### 五:设置和蓝牙交互的状态接收回调，有三个方法
+#### 五:设置和蓝牙交互的状态接收回调，有四个方法
     	 /**
-         * 交互状态
+         * 交互状态 所有回调都已在ui线程执行
          */
         mBLE.getBleCurrentState(new BluetoothChangeListener() {
             //蓝牙连接状态
             @Override
             public void onCurrentState(int state) {
-            	//状态码在本文末.
+            	//状态码在本文结尾处.
             }
 
-            //收到蓝牙设备返回的数据
+            //收到下位机返回的数据
             @Override
             public void onBleWriteResult(byte[] result) {
 
@@ -53,7 +53,7 @@ app的 build.gradle添加
             }
 
             /**
-             * 写入蓝牙设备成功回调(上位机发送到下位机成功,不代表数据正确和错误,不代表一定能收到回调)
+             * 写入下位机设备成功回调(上位机发送到下位机成功,不代表数据正确和错误,不代表一定能收到回调)
              */
             @Override
             public void onWriteDataSucceed() {
@@ -61,7 +61,7 @@ app的 build.gradle添加
             }
         });
 #### 六:开始扫描/停止扫描
-      //开始扫描  true是开始扫描，false是停止扫描  扫描到的蓝牙设备会在onBleScanResult()方法中回调,该接口上面已经实现了，该方法回调次数是附近蓝牙设备数和扫描时间决定
+      //开始扫描  true是开始扫描，false是停止扫描  扫描到的蓝牙设备会在onBleScanResult()方法中回调,该接口上面已经实现了，该方法回调次数是附近蓝牙设备数和扫描时间决定,每次扫描前都会自动断开当前的连接和上一次扫描,所以不需要重复调用(设备在连接中消耗较大，所以不支持连接中扫描！！！)
         mBLE.startScanDevices(true);
       //停止扫描
         stopScanDevices();
@@ -77,7 +77,7 @@ app的 build.gradle添加
             mBLE.close();
             mBLE = null;
         }
-#### 十:回调处理都已在主线程执行，
+#### 十:状态码，
     // 设备连接断开
     public static final int STATE_DISCONNECTED = 0;
     // 设备正在扫描
