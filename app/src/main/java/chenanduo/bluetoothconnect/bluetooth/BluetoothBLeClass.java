@@ -203,6 +203,14 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback{
          */
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+            if (mBluetoothChangeListener != null) {
+                ThreadUtils.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mBluetoothChangeListener.onWriteDataSucceed();
+                    }
+                });
+            }
             Log.d(TAG, "写入蓝牙设备成功!");
         }
     };

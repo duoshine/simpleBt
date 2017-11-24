@@ -30,10 +30,10 @@ import java.util.UUID;
  */
 
 @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
-public class BluetoothBLeClass implements LeScanCallback {
+public class BluetoothBLeClass extends BleBase implements LeScanCallback{
     private static final String DISENABLE = "00002902-0000-1000-8000-00805f9b34fb";
     private static BluetoothBLeClass mBLE;
-    private final static String TAG = "BluetoothBLeClass";
+    private final static String TAG = "simpleBtTest";
     //uuid 由构造函数传入
     private static String SERVICE_UUID;
     private static String NOTIFI_UUID;
@@ -75,20 +75,16 @@ public class BluetoothBLeClass implements LeScanCallback {
     boolean exist = false;
     //每次断开连接是否清除缓存
     public static boolean isCloseCleanCache = false;
+    //写的uuid
     private BluetoothGattCharacteristic mWriteCharacteristic;
-
-    /*回调设备的连接状态等信息*/
-    public interface BluetoothChangeListener {
-
-        void onCurrentState(int state);
-
-        void onBleWriteResult(byte[] result);
-
-        void onBleScanResult(List<BluetoothDevice> device);
-    }
 
     private BluetoothChangeListener mBluetoothChangeListener;
 
+    /**
+     * 通过此接口回调所有和蓝牙的交互出去给开发者
+     * @param bluetoothChangeListener
+     */
+    @Override
     public void getBleCurrentState(BluetoothChangeListener bluetoothChangeListener) {
         mBluetoothChangeListener = bluetoothChangeListener;
     }
@@ -110,18 +106,21 @@ public class BluetoothBLeClass implements LeScanCallback {
     }
 
     //设置扫描时间 不设置默认5秒
+    @Override
     public BluetoothBLeClass setScanTime(int time) {
         SCAN_PERIOD = time;
         return mBLE;
     }
 
     //设置断开自动连接
+    @Override
     public BluetoothBLeClass setAutoConnect(boolean isAutoConnect) {
         this.isAutoConnect = isAutoConnect;
         return mBLE;
     }
 
     //设置每次断开连接都清除缓存
+    @Override
     public BluetoothBLeClass closeCleanCache(boolean isCloseCleanCache) {
         this.isCloseCleanCache = isCloseCleanCache;
         return mBLE;
@@ -204,7 +203,15 @@ public class BluetoothBLeClass implements LeScanCallback {
          */
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-
+            if (mBluetoothChangeListener != null) {
+                ThreadUtils.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mBluetoothChangeListener.onWriteDataSucceed();
+                    }
+                });
+            }
+            Log.d(TAG, "写入蓝牙设备成功!");
         }
     };
 
@@ -223,17 +230,36 @@ public class BluetoothBLeClass implements LeScanCallback {
         }
         //启用通知
         mBluetoothGatt.setCharacteristicNotification(notifiCharacteristic, true);
-        BluetoothGattDescriptor descriptor = notifiCharacteristic.getDescriptor(UUID.fromString(DISENABLE));
-        descriptor.setValue(new byte[]{0x01});
-        //将给定描述符的值写入到远程设备。
+
+        BluetoothGattDescriptor descriptor = notifiCharacteristic
+                .getDescriptor(UUID.fromString(DISENABLE));
+        if (descriptor == null) {
+            descriptor = new BluetoothGattDescriptor(
+                    UUID.fromString(DISENABLE),
+                    BluetoothGattDescriptor.PERMISSION_WRITE);
+        }
+        descriptor
+                .setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
         mBluetoothGatt.writeDescriptor(descriptor);
+
+     /*   BluetoothGattDescriptor descriptor = notifiCharacteristic.getDescriptor(UUID.fromString(DISENABLE));
+        if (descriptor != null) {
+            descriptor.setValue(new byte[]{0x01});
+            //将给定描述符的值写入到远程设备。
+            mBluetoothGatt.writeDescriptor(descriptor);
+        }*/
+
+        //拿到写的uuid
         mWriteCharacteristic = service.getCharacteristic(UUID.fromString(WRITE_UUID));
+        if (notifiCharacteristic != null && mWriteCharacteristic != null) {
+            Log.d(TAG, "通知和写特征找到,已具备通信条件!");
+        }
     }
 
     /*处理连接上蓝牙设备的逻辑*/
     private void initConnected(BluetoothGatt gatt) {
         /**
-         搜索连接设备所支持的service  需要连 接上才可以 这个方法是异步操作
+         搜索连接设备所支持的service  需要连接上才可以 这个方法是异步操作
          在回调函数onServicesDiscovered中得到status
          通过判断status是否等于BluetoothGatt.GATT_SUCCESS来判断查找Service是否成功
          设备连接成功就开始查找该设备所有的服务 这有一点延迟
@@ -262,7 +288,6 @@ public class BluetoothBLeClass implements LeScanCallback {
                 public void run() {
                     //如果已经连接上就停止定时器
                     if (isBleConnect == true) {
-                        Log.d(TAG, "run : " + "已经连接上停止定时器");
                         if (mTimer != null) {
                             mTimer.cancel();
                             mTimer = null;
@@ -288,6 +313,7 @@ public class BluetoothBLeClass implements LeScanCallback {
      * 初始化对本地蓝牙适配器的引用 并判断蓝牙是否是开启状态
      * 如果初始化成功则返回true
      */
+    @Override
     public boolean initialize() {
         if (!mContext.getPackageManager().hasSystemFeature(
                 PackageManager.FEATURE_BLUETOOTH_LE)) {
@@ -317,6 +343,7 @@ public class BluetoothBLeClass implements LeScanCallback {
     /*
      * 根据address连接蓝牙设备
      */
+    @Override
     public boolean connect(final String address) {
         if (mBluetoothAdapter == null || address == null) {
             return false;
@@ -349,6 +376,7 @@ public class BluetoothBLeClass implements LeScanCallback {
     /*
      *取消等待连接或断开一个现有的连接
      */
+    @Override
     public void disconnect() {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             return;
@@ -359,6 +387,7 @@ public class BluetoothBLeClass implements LeScanCallback {
     /*
      * 使用完Ble后一定要调用此方法释放资源
      */
+    @Override
     public void close() {
         isAutoConnect = false;
         isBleConnect = false;
@@ -380,8 +409,10 @@ public class BluetoothBLeClass implements LeScanCallback {
      * @param uuid
      * @return
      */
+    @Override
     public boolean writeCharacteristic(byte[] value) {
         if (value == null || mWriteCharacteristic == null) {
+            Log.d(TAG, "数据为空或者写特征为空,写入失败!");
             return false;
         }
         //TODO 待测试 数据大于20字节 可以自动分包
@@ -397,6 +428,7 @@ public class BluetoothBLeClass implements LeScanCallback {
      * @param enable
      * @param mLeScanCallback
      */
+    @Override
     public void startScanDevices(final boolean enable) {
         //五秒后停止扫描
         if (enable) {
@@ -427,6 +459,7 @@ public class BluetoothBLeClass implements LeScanCallback {
      *停止扫描设备
      *
      */
+    @Override
     public void stopScanDevices() {
         //如果当前有设备正在连接的话 先断开连接
         disconnect();
@@ -480,11 +513,13 @@ public class BluetoothBLeClass implements LeScanCallback {
     }
 
     //返回当前设备连接状态
+    @Override
     public int getBleConnectState() {
         return connectionState;
     }
 
     //清除缓存
+    @Override
     public boolean refreshDeviceCache() {
         if (mBluetoothGatt != null) {
             try {
