@@ -24,12 +24,12 @@ app的 build.gradle添加
     .closeCleanCache(true);//设置每次断开连接都清除缓存 无特殊情况 不建议开启
 #### 三:当然要判断一下设备是否支持ble(Android4.3，蓝牙4.0)
     if (!mBLE.initialize()) {
-        //弹窗显示开启蓝牙
+        //弹窗显示开启蓝牙 返回false则蓝牙尚未开启 返回true则蓝牙已经开启
         Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
 #### 四:6.0设备需要申请下定位权限，不然找不到蓝牙设备，部分机型可能没有弹窗申请，手动开启gps即可
-#### 五:设置和蓝牙交互的状态接收回调，有三个方法
+#### 五:设置和蓝牙交互的状态接收回调，有四个方法
     	 /**
          * 交互状态
          */
@@ -37,10 +37,10 @@ app的 build.gradle添加
             //蓝牙连接状态
             @Override
             public void onCurrentState(int state) {
-            	//状态码在本文末.
+            	//状态码在本文结尾处.
             }
 
-            //收到蓝牙设备返回的数据
+            //收到下位机返回的数据
             @Override
             public void onBleWriteResult(byte[] result) {
 
@@ -53,7 +53,7 @@ app的 build.gradle添加
             }
 
             /**
-             * 写入蓝牙设备成功回调(上位机发送到下位机成功,不代表数据正确和错误,不代表一定能收到回调)
+             * 写入下位机设备成功回调(上位机发送到下位机成功,不代表数据正确和错误,不代表一定能收到回调)
              */
             @Override
             public void onWriteDataSucceed() {
@@ -61,7 +61,7 @@ app的 build.gradle添加
             }
         });
 #### 六:开始扫描/停止扫描
-      //开始扫描  true是开始扫描，false是停止扫描  扫描到的蓝牙设备会在onBleScanResult()方法中回调,该接口上面已经实现了，该方法回调次数是附近蓝牙设备数和扫描时间决定
+      //开始扫描  true是开始扫描，false是停止扫描  扫描到的蓝牙设备会在onBleScanResult()方法中回调,该接口上面已经实现了，该方法回调次数是附近蓝牙设备数和扫描时间决定,每次扫描前都会自动断开当前的连接和上一次扫描,所以不需要重复调用(设备在连接中消耗较大，所以不支持连接中扫描！！！)
         mBLE.startScanDevices(true);
       //停止扫描
         stopScanDevices();
