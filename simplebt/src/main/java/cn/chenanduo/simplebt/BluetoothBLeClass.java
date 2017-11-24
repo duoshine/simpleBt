@@ -16,7 +16,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -38,8 +37,8 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback{
     private static String SERVICE_UUID;
     private static String NOTIFI_UUID;
     private static String WRITE_UUID;
-    private BluetoothManager mBluetoothManager;
-    private BluetoothAdapter mBluetoothAdapter;
+    private static BluetoothManager mBluetoothManager;
+    private static BluetoothAdapter mBluetoothAdapter;
     //本次连接的蓝牙地址
     public String mBluetoothDeviceAddress;
     public BluetoothGatt mBluetoothGatt;
@@ -101,6 +100,19 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback{
             SERVICE_UUID = serviceuuid;
             NOTIFI_UUID = notifiuuid;
             WRITE_UUID = writeuuid;
+
+            if (!mContext.getPackageManager().hasSystemFeature(
+                    PackageManager.FEATURE_BLUETOOTH_LE)) {
+                Log.d(TAG, "该设备不支持ble");
+                return null;
+            }
+            if (mBluetoothManager == null) {
+                mBluetoothManager = (BluetoothManager) mContext
+                        .getSystemService(Context.BLUETOOTH_SERVICE);
+            }
+            if (mBluetoothAdapter == null) {
+                mBluetoothAdapter = mBluetoothManager.getAdapter();
+            }
         }
         return mBLE;
     }
@@ -315,29 +327,8 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback{
      */
     @Override
     public boolean initialize() {
-        if (!mContext.getPackageManager().hasSystemFeature(
-                PackageManager.FEATURE_BLUETOOTH_LE)) {
-            Toast.makeText(mContext, "该设备不支持BLE", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
-        if (mBluetoothManager == null) {
-            mBluetoothManager = (BluetoothManager) mContext
-                    .getSystemService(Context.BLUETOOTH_SERVICE);
-            if (mBluetoothManager == null) {
-                return false;
-            }
-        }
-        mBluetoothAdapter = mBluetoothManager.getAdapter();
-        if (mBluetoothAdapter == null) {
-            return false;
-        }
         //判断是否开启蓝牙  如果没有开启 弹窗提示用户开启蓝牙
-        if (mBluetoothAdapter.isEnabled()) {
-            return true;
-        } else {
-            return false;
-        }
+        return mBluetoothAdapter.isEnabled() ? true : false;
     }
 
     /*
