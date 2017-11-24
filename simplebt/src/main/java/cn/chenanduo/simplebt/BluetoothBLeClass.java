@@ -208,7 +208,7 @@ public class BluetoothBLeClass implements LeScanCallback {
         }
     };
 
-    /*用于测试使用直接使用Uuid获取通知和写*/
+    /*启动通知通道并将给定描述符的值写入到远程设备*/
     private void displayGattServices(BluetoothGatt gatt) {
         if (SERVICE_UUID == null || NOTIFI_UUID == null || WRITE_UUID == null) {
             return;
@@ -221,9 +221,11 @@ public class BluetoothBLeClass implements LeScanCallback {
         if (notifiCharacteristic == null) {
             return;
         }
+        //启用通知
         mBluetoothGatt.setCharacteristicNotification(notifiCharacteristic, true);
         BluetoothGattDescriptor descriptor = notifiCharacteristic.getDescriptor(UUID.fromString(DISENABLE));
         descriptor.setValue(new byte[]{0x01});
+        //将给定描述符的值写入到远程设备。
         mBluetoothGatt.writeDescriptor(descriptor);
         mWriteCharacteristic = service.getCharacteristic(UUID.fromString(WRITE_UUID));
     }
@@ -231,7 +233,7 @@ public class BluetoothBLeClass implements LeScanCallback {
     /*处理连接上蓝牙设备的逻辑*/
     private void initConnected(BluetoothGatt gatt) {
         /**
-         搜索连接设备所支持的service  需要连接上才可以 这个方法是异步操作
+         搜索连接设备所支持的service  需要连 接上才可以 这个方法是异步操作
          在回调函数onServicesDiscovered中得到status
          通过判断status是否等于BluetoothGatt.GATT_SUCCESS来判断查找Service是否成功
          设备连接成功就开始查找该设备所有的服务 这有一点延迟
@@ -356,7 +358,6 @@ public class BluetoothBLeClass implements LeScanCallback {
 
     /*
      * 使用完Ble后一定要调用此方法释放资源
-     *
      */
     public void close() {
         isAutoConnect = false;

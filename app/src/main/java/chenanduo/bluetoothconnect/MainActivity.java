@@ -21,6 +21,7 @@ import android.widget.Toast;
 import java.util.List;
 
 import chenanduo.bluetoothconnect.bluetooth.BluetoothBLeClass;
+import chenanduo.bluetoothconnect.bluetooth.BluetoothChangeListener;
 import chenanduo.bluetoothconnect.bluetooth.DeviceShowDialog;
 
 /**
@@ -71,9 +72,9 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
         //6.0动态申请权限
         requestPermission();
         /**
-         * 蓝牙连接状态
+         * 交互状态
          */
-        mBLE.getBleCurrentState(new BluetoothBLeClass.BluetoothChangeListener() {
+        mBLE.getBleCurrentState(new BluetoothChangeListener() {
             //蓝牙连接状态
             @Override
             public void onCurrentState(int state) {
@@ -92,6 +93,14 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
                 if (keysSelectDialog.isShowing()) {
                     keysSelectDialog.notifyDataSetChanged(device);
                 }
+            }
+
+            /**
+             * 写入蓝牙设备成功回调
+             */
+            @Override
+            public void onWriteDataSucceed() {
+
             }
         });
 
