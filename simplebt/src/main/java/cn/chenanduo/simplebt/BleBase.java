@@ -37,6 +37,9 @@ public abstract class BleBase {
     //设置每次断开连接都清除缓存
     public abstract BluetoothBLeClass closeCleanCache(boolean isCloseCleanCache);
 
+    //设置扫描过滤
+    public abstract BluetoothBLeClass setFiltration(String filtration);
+
     //设置断开自动连接
     public abstract BluetoothBLeClass setAutoConnect(boolean isAutoConnect);
 

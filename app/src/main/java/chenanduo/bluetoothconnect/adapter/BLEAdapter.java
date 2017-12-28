@@ -1,6 +1,5 @@
 package chenanduo.bluetoothconnect.adapter;
 
-import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -13,15 +12,17 @@ import android.widget.TextView;
 import java.util.List;
 
 import chenanduo.bluetoothconnect.R;
+import chenanduo.bluetoothconnect.bean.DeviceInfoBean;
 
 
 public class BLEAdapter extends BaseAdapter {
+    private static final String TAG = "simpleBtTest";
     private Context context;
 
-    private List<BluetoothDevice> mmBlueToothKeys;
+    private List<DeviceInfoBean> mmBlueToothKeys;
 
     public BLEAdapter(Context context,
-                      List<BluetoothDevice> mBlueToothKeys) {
+                      List<DeviceInfoBean> mBlueToothKeys) {
         this.context = context;
         this.mmBlueToothKeys = mBlueToothKeys;
     }
@@ -69,7 +70,7 @@ public class BLEAdapter extends BaseAdapter {
             this.btn_img = (ImageView) view.findViewById(R.id.btn_img);
         }
 
-        public void setShow(BluetoothDevice key) {
+        public void setShow(DeviceInfoBean key) {
             /*if (key.isBleKey()) {
                 String name = key.device.getName();
 				if (!TextUtils.isEmpty(name)) {
@@ -88,11 +89,10 @@ public class BLEAdapter extends BaseAdapter {
             this.btn_img.setImageResource(R.mipmap.ic_launcher);
             if (!TextUtils.isEmpty(name)) {
                 this.tv_devicename.setText("name：" + name);
-                this.tv_devicesaddress.setText("address：" + key.getAddress());
             } else {
                 this.tv_devicename.setText("name：--");
-                this.tv_devicesaddress.setText("address：--");
             }
+            this.tv_devicesaddress.setText("address：" + key.getAddress());
         }
     }
 }

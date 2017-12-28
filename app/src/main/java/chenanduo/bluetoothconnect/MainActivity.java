@@ -3,7 +3,6 @@ package chenanduo.bluetoothconnect;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -13,13 +12,17 @@ import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import chenanduo.bluetoothconnect.bean.DeviceInfoBean;
 import chenanduo.bluetoothconnect.bluetooth.BluetoothBLeClass;
 import chenanduo.bluetoothconnect.bluetooth.BluetoothChangeListener;
 import chenanduo.bluetoothconnect.bluetooth.DeviceShowDialog;
@@ -30,6 +33,7 @@ import chenanduo.bluetoothconnect.bluetooth.DeviceShowDialog;
 public class MainActivity extends AppCompatActivity implements DeviceShowDialog.OnKeySelectedListener, View.OnClickListener {
     private static final int REQUEST_PERMISSION_ACCESS_LOCATION = 2;
     private static final int REQUEST_ENABLE_BT = 3;
+    private static final String TAG = "simpleBtTest";
     private BluetoothBLeClass mBLE;
     private DeviceShowDialog keysSelectDialog;
     private Button mBtnScan;
@@ -59,12 +63,13 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     private void init() {
         mBLE = BluetoothBLeClass.getInstane(MainActivity.this, "", "", "")
                 .setScanTime(5000)//设置扫描时间为5秒 不设置默认5秒
-                .setAutoConnect(true)//设置断开后自动连接
-                .closeCleanCache(true);//设置每次断开连接都清除缓存
+                .setAutoConnect(false)//设置断开后自动连接
+                .closeCleanCache(true)//设置每次断开连接都清除缓存
+                .setFiltration("ANT");
         if (!mBLE.initialize()) {
-        //弹窗显示开启蓝牙
-        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+            //弹窗显示开启蓝牙
+            Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
         }
         //初始化dialog
         keysSelectDialog = new DeviceShowDialog(MainActivity.this, this, this);
@@ -89,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
 
             //扫描回调  集合就是扫描到的附近的设备
             @Override
-            public void onBleScanResult(List<BluetoothDevice> device) {
+            public void onBleScanResult(List<DeviceInfoBean> device) {
                 if (keysSelectDialog.isShowing()) {
                     keysSelectDialog.notifyDataSetChanged(device);
                 }
@@ -97,9 +102,10 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
 
             /**
              * 写入蓝牙设备成功回调
+             * @param value
              */
             @Override
-            public void onWriteDataSucceed() {
+            public void onWriteDataSucceed(byte[] value) {
 
             }
         });
@@ -114,6 +120,8 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             }
         });
     }
+
+    private List<Map<String, DeviceInfoBean>> datas = new ArrayList<>();
 
     /*和蓝牙设备交互的状态*/
     private void bleCurrentState(int state) {
@@ -173,6 +181,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     private void reSearchKeys() {
         //开始扫描
         mBLE.startScanDevices(true);
+        //一定要做清除状态
         keysSelectDialog.clear();
     }
 
@@ -214,7 +223,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
 
     //点击设备开始连接
     @Override
-    public void OnKeySelected(BluetoothDevice blueToothKey) {
+    public void OnKeySelected(DeviceInfoBean blueToothKey) {
         //记录当前连接的蓝牙设备名称
         currentConnectBle = blueToothKey.getName();
         //连接蓝牙
@@ -277,6 +286,15 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     private void hiedDialog() {
         if (mDialog != null) {
             mDialog.dismiss();
+        }
+    }
+
+    public void text(View view) {
+        String str = "b:A0：50：";
+        if (str.contains("B")) {
+            Log.d(TAG, "text : 我包含");
+        } else {
+            Log.d(TAG, "text : 我不包含");
         }
     }
 }

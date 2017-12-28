@@ -9,6 +9,12 @@
     android:layout_width="match_parent"
     android:text="扫描设备"
     android:layout_height="wrap_content"/>
+
+    <Button
+        android:onClick="text"
+        android:layout_width="match_parent"
+        android:text="测试"
+        android:layout_height="wrap_content"/>
 <TextView
     android:id="@+id/tvName"
     android:layout_width="match_parent"
