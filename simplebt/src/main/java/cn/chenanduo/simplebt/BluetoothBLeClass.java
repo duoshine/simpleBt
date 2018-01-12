@@ -103,6 +103,18 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         mBluetoothChangeListener = bluetoothChangeListener;
     }
 
+    //用于固件升级的情况下切换uuid
+    @Override
+    public void setUUID(String service_uuid, String notifi_uuid, String write_uuid) {
+        if (service_uuid == null || notifi_uuid == null || write_uuid == null) {
+            Log.e(TAG, "uuid不可以传null");
+            return;
+        }
+        SERVICE_UUID = service_uuid;
+        NOTIFI_UUID = notifi_uuid;
+        WRITE_UUID = write_uuid;
+    }
+
     private BluetoothBLeClass(Context c) {
         mContext = c;
     }
