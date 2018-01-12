@@ -10,7 +10,7 @@
 app的 build.gradle添加
 
 	dependencies {
-	      compile 'com.github.duoshine:simpleBt:2.1.1'
+	  compile 'com.github.duoshine:simpleBt:2.2.0'
 	}
 
 
@@ -21,7 +21,8 @@ app的 build.gradle添加
     BluetoothBLeClass mBLE = BluetoothBLeClass.getInstane(MainActivity.this, "", "", "")
     .setScanTime(5000)
     .setAutoConnect(true)//设置断开后自动连接
-    .closeCleanCache(true);//设置每次断开连接都清除缓存 无特殊情况 不建议开启
+    .closeCleanCache(true)//设置每次断开连接都清除缓存 无特殊情况 不建议开启
+    .setFiltration("A");//设置过滤条件 比如我想过滤所有名称中或mac地址中包含A的蓝牙设备,不需要不实现方法或者设为null
 #### 三:当然要判断一下蓝牙是否开启
     if (!mBLE.initialize()) {
         //弹窗显示开启蓝牙 返回false则蓝牙尚未开启 返回true则蓝牙已经开启
@@ -43,21 +44,21 @@ app的 build.gradle添加
             //收到下位机返回的数据
             @Override
             public void onBleWriteResult(byte[] result) {
-
+			
             }
 
             //扫描回调  集合就是扫描到的附近的设备
             @Override
-            public void onBleScanResult(List<BluetoothDevice> device) {
-            
+            public void onBleScanResult(List<DeviceInfoBean> device) {
+            	
             }
 
             /**
              * 写入下位机设备成功回调(上位机发送到下位机成功,不代表数据正确和错误,不代表一定能收到回调)
              */
-            @Override
-            public void onWriteDataSucceed() {
-
+             @Override
+            public void onWriteDataSucceed(byte[] value) {
+		//数据成功写入蓝牙设备回调 value是写入的数据
             }
         });
 #### 六:开始扫描/停止扫描
@@ -73,7 +74,7 @@ app的 build.gradle添加
     mBLE.writeCharacteristic(bytes);
 #### 九:最后Destroy时
     if (mBLE != null) {
-            //一定要调用 释放资源  一定要调用 释放资源  一定要调用 释放资源
+            //一定要调用释放资源  一定要调用释放资源  一定要调用释放资源
             mBLE.close();
             mBLE = null;
         }
@@ -102,5 +103,8 @@ app的 build.gradle添加
 
 
 
+#### 2.2.0更新
+1.优化了扫描时的过滤,当前只支持名称和mac地址,使用的是contains方法,使用时注意,不传递就不要实现该方法或者传Null，如果传""会导致扫描不到设备
 
+2.优化了扫描结果,目前增加了rssi和scanRecord(远程设备广播信息),以list集合传递出去,需要注意的是集合中的设备是唯一的,但是该设备的广播是更新的
 
