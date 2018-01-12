@@ -2,7 +2,7 @@ package chenanduo.bluetoothconnect.bluetooth;
 
 import java.util.List;
 
-import chenanduo.bluetoothconnect.bean.DeviceInfoBean;
+import chenanduo.bluetoothconnect.bean.DeviceBean;
 
 /**
  * Created by chen on 2017  封装了和蓝牙的交互函数
@@ -16,7 +16,7 @@ public interface BluetoothChangeListener {
     void onBleWriteResult(byte[] result);
 
     //扫描回调
-    void onBleScanResult(List<DeviceInfoBean> device);
+    void onBleScanResult(List<DeviceBean> device);
 
     //写入成功回调
     void onWriteDataSucceed(byte[] value);

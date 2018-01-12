@@ -2,7 +2,7 @@ package cn.chenanduo.simplebt;
 
 import java.util.List;
 
-import cn.chenanduo.simplebt.bean.DeviceInfoBean;
+import cn.chenanduo.simplebt.bean.DeviceBean;
 
 
 /**
@@ -17,7 +17,7 @@ public interface BluetoothChangeListener {
     void onBleWriteResult(byte[] result);
 
     //扫描回调
-    void onBleScanResult(List<DeviceInfoBean> device);
+    void onBleScanResult(List<DeviceBean> device);
 
     //写入成功回调
     void onWriteDataSucceed(byte[] value);

@@ -18,11 +18,9 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import chenanduo.bluetoothconnect.bean.DeviceInfoBean;
+import chenanduo.bluetoothconnect.bean.DeviceBean;
 import chenanduo.bluetoothconnect.bluetooth.BluetoothBLeClass;
 import chenanduo.bluetoothconnect.bluetooth.BluetoothChangeListener;
 import chenanduo.bluetoothconnect.bluetooth.DeviceShowDialog;
@@ -65,7 +63,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
                 .setScanTime(5000)//设置扫描时间为5秒 不设置默认5秒
                 .setAutoConnect(false)//设置断开后自动连接
                 .closeCleanCache(true)//设置每次断开连接都清除缓存
-                .setFiltration("ANT");
+                .setFiltration("ANT");//设置过滤条件
         if (!mBLE.initialize()) {
             //弹窗显示开启蓝牙
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -94,7 +92,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
 
             //扫描回调  集合就是扫描到的附近的设备
             @Override
-            public void onBleScanResult(List<DeviceInfoBean> device) {
+            public void onBleScanResult(List<DeviceBean> device) {
                 if (keysSelectDialog.isShowing()) {
                     keysSelectDialog.notifyDataSetChanged(device);
                 }
@@ -121,7 +119,6 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
         });
     }
 
-    private List<Map<String, DeviceInfoBean>> datas = new ArrayList<>();
 
     /*和蓝牙设备交互的状态*/
     private void bleCurrentState(int state) {
@@ -223,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
 
     //点击设备开始连接
     @Override
-    public void OnKeySelected(DeviceInfoBean blueToothKey) {
+    public void OnKeySelected(DeviceBean blueToothKey) {
         //记录当前连接的蓝牙设备名称
         currentConnectBle = blueToothKey.getName();
         //连接蓝牙

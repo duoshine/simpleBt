@@ -28,7 +28,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
-import chenanduo.bluetoothconnect.bean.DeviceInfoBean;
+import chenanduo.bluetoothconnect.bean.DeviceBean;
 
 /**
  * Created by chen on 5/28/17.
@@ -83,11 +83,15 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     //写的uuid
     private BluetoothGattCharacteristic mWriteCharacteristic;
     //这个集合是为了过滤掉同设备 但是广播数据会一直刷新
-    private Map<String, DeviceInfoBean> map = new HashMap<>();
+    private Map<String, DeviceBean> map = new HashMap<>();
     //这个集合是为了存放已经过滤好的设备 直接回调给外部
-    private List<DeviceInfoBean> datas = new ArrayList<>();
-
+    private List<DeviceBean> datas = new ArrayList<>();
+    //是否具备通信条件
+    private boolean isCommunication;
     private BluetoothChangeListener mBluetoothChangeListener;
+    private boolean mIsWriteDescriptor;
+    private BluetoothGattCharacteristic mNotifiCharacteristic;
+    private boolean mIsSetCharacteristicNotification;
 
     /**
      * 通过此接口回调所有和蓝牙的交互出去给开发者
@@ -253,21 +257,21 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         if (service == null) {
             return;
         }
-        BluetoothGattCharacteristic notifiCharacteristic = service.getCharacteristic(UUID.fromString(NOTIFI_UUID));
-        if (notifiCharacteristic == null) {
+        mNotifiCharacteristic = service.getCharacteristic(UUID.fromString(NOTIFI_UUID));
+        if (mNotifiCharacteristic == null) {
             return;
         }
         //启用通知
-        mBluetoothGatt.setCharacteristicNotification(notifiCharacteristic, true);
+        mIsSetCharacteristicNotification = mBluetoothGatt.setCharacteristicNotification(mNotifiCharacteristic, true);
 
-        BluetoothGattDescriptor descriptor = notifiCharacteristic
+        BluetoothGattDescriptor descriptor = mNotifiCharacteristic
                 .getDescriptor(UUID.fromString(DISENABLE));
         if (descriptor == null) {
             descriptor = new BluetoothGattDescriptor(
                     UUID.fromString(DISENABLE),
                     BluetoothGattDescriptor.PERMISSION_WRITE);
         }
-        descriptor
+        mIsWriteDescriptor = descriptor
                 .setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
         mBluetoothGatt.writeDescriptor(descriptor);
 
@@ -277,11 +281,12 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
             //将给定描述符的值写入到远程设备。
             mBluetoothGatt.writeDescriptor(descriptor);
         }*/
-
         //拿到写的uuid
         mWriteCharacteristic = service.getCharacteristic(UUID.fromString(WRITE_UUID));
-        if (notifiCharacteristic != null && mWriteCharacteristic != null) {
+        if (mNotifiCharacteristic != null && mWriteCharacteristic != null) {
             Log.d(TAG, "通知和写特征找到,已具备通信条件!");
+            //已经具备通信条件
+            isCommunication = true;
         }
     }
 
@@ -389,6 +394,8 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             return;
         }
+        //不具备通信条件
+        isCommunication = false;
         mBluetoothGatt.disconnect();
     }
 
@@ -399,6 +406,8 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     public void close() {
         isAutoConnect = false;
         isBleConnect = false;
+        //不具备通信条件了
+        isCommunication = false;
         if (mTimer != null) {
             Log.d(TAG, "close : " + "应用销毁 停止计时器");
             mTimer.cancel();
@@ -419,8 +428,8 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
      */
     @Override
     public boolean writeCharacteristic(byte[] value) {
-        if (value == null || mWriteCharacteristic == null) {
-            Log.d(TAG, "数据为空或者写特征为空,写入失败!");
+        if (value == null || mWriteCharacteristic == null || isCommunication == false) {
+            Log.d(TAG, "不满足写数据条件,写入失败");
             return false;
         }
         //TODO 待测试 数据大于20字节 可以自动分包
@@ -519,7 +528,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
             if (filtration != null) {
                 //过滤mac地址或者名称
                 if (name.contains(filtration) || address.contains(filtration)) {
-                    DeviceInfoBean bean = new DeviceInfoBean();
+                    DeviceBean bean = new DeviceBean();
                     bean.setName(name);
                     bean.setAddress(address);
                     bean.setRssi(rssi);
@@ -528,15 +537,15 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
                 }
             } else {
                 //没有设置过滤
-                DeviceInfoBean bean = new DeviceInfoBean();
+                DeviceBean bean = new DeviceBean();
                 bean.setName(name);
                 bean.setAddress(address);
                 bean.setRssi(rssi);
                 bean.setScanRecord(scanRecord);
                 map.put(address, bean);
             }
-            Set<Map.Entry<String, DeviceInfoBean>> entries = map.entrySet();
-            Iterator<Map.Entry<String, DeviceInfoBean>> iterator = entries.iterator();
+            Set<Map.Entry<String, DeviceBean>> entries = map.entrySet();
+            Iterator<Map.Entry<String, DeviceBean>> iterator = entries.iterator();
             datas.clear();
             while (iterator.hasNext()) {
                 datas.add(iterator.next().getValue());

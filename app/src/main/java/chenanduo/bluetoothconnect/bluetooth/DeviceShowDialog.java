@@ -20,7 +20,7 @@ import java.util.List;
 
 import chenanduo.bluetoothconnect.R;
 import chenanduo.bluetoothconnect.adapter.BLEAdapter;
-import chenanduo.bluetoothconnect.bean.DeviceInfoBean;
+import chenanduo.bluetoothconnect.bean.DeviceBean;
 
 /**
  * Created by chen on 5/28/17.
@@ -32,7 +32,7 @@ public class DeviceShowDialog extends AlertDialog {
     private Context context;
     private DisplayMetrics displayMetrics;
     private ViewHoder layout;
-    private List<DeviceInfoBean> mbBlueToothKeys;
+    private List<DeviceBean> mbBlueToothKeys;
     private BLEAdapter mKeysAdapter;
     private View.OnClickListener onClickListener;
     private OnKeySelectedListener onKeySelectedListener;
@@ -87,7 +87,7 @@ public class DeviceShowDialog extends AlertDialog {
         layout.FrameLayout.setVisibility(View.VISIBLE);
     }
 
-    public void notifyDataSetChanged(List<DeviceInfoBean> mbBlueToothKeys2) {
+    public void notifyDataSetChanged(List<DeviceBean> mbBlueToothKeys2) {
         if (mbBlueToothKeys2 != null && mbBlueToothKeys2.size() > 0) {
             layout.listView.setVisibility(view.VISIBLE);
             layout.FrameLayout.setVisibility(View.GONE);
@@ -121,6 +121,6 @@ public class DeviceShowDialog extends AlertDialog {
     }
 
     public interface OnKeySelectedListener {
-        public void OnKeySelected(DeviceInfoBean blueToothKey);
+        public void OnKeySelected(DeviceBean blueToothKey);
     }
 }

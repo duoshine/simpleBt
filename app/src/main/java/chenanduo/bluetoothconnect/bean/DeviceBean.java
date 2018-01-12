@@ -4,7 +4,7 @@ package chenanduo.bluetoothconnect.bean;
  * Created by chen on 2017
  */
 
-public class DeviceInfoBean {
+public class DeviceBean {
     private String name;
 
     private String address;
