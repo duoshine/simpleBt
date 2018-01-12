@@ -69,8 +69,8 @@ app的 build.gradle添加
 #### 七:连接蓝牙
       //连接蓝牙  mac地址在扫描到的device中可以通过device.getAddress()获取到
         mBLE.connect(mac地址);
-#### 八:发送指令
-    //bytes是你要发送的数据,根据你的协议来,发送成功为true,接收回调在onBleWriteResult()方法中，该接口上面已经实现了
+#### 八:写数据
+    //bytes是你要发送的数据,根据你的协议来,接收下位机回调在onBleWriteResult()方法中，该接口上面已经实现了,写成功的前提是已经具备通信条件(找到服务),如果返回false,根据Log判断是写入失败还是不具备通信条件(日志过滤 simpleBtTest),如果不具备通信条件,那么可能是1.uuid写错,导致服务找不到,2.连接成功后无法立即找到服务,可能会有一点短暂的延时后才能找到!
     mBLE.writeCharacteristic(bytes);
 #### 九:最后Destroy时
     if (mBLE != null) {
@@ -95,16 +95,19 @@ app的 build.gradle添加
     private int connectionState = STATE_DISCONNECTED;
 
 #### 十一:工具类中测试log过滤为：simpleBtTest
-工具类是单例的，主要为了方便可能多个页面需要蓝牙操作
+工具类是单例的，主要为了方便可能多个页面需要蓝牙操作，在初始化之后的页面中获取实例时最好传递uuid,而不是null，可能存在内存不足已回收!
 
 
 
 
 
-
+### 历史更新
 
 #### 2.2.0更新
 1.优化了扫描时的过滤,当前只支持名称和mac地址,使用的是contains方法,使用时注意,不传递就不要实现该方法或者传Null，如果传""会导致扫描不到设备
 
 2.优化了扫描结果,目前增加了rssi和scanRecord(远程设备广播信息),以list集合传递出去,需要注意的是集合中的设备是唯一的,但是该设备的广播是更新的
+
+#### 2.2.1更新
+1.优化了部分机型搜索服务特征慢,导致写数据成功一次之后无法继续写入,现在在write方法中,只有具备通信条件的前提下才可以写入数据
 
