@@ -38,7 +38,7 @@ public abstract class BleBase {
     public abstract BluetoothBLeClass closeCleanCache(boolean isCloseCleanCache);
 
     //设置扫描过滤
-    public abstract BluetoothBLeClass setFiltration(String filtration);
+    public abstract BluetoothBLeClass setFiltration(String filtration1,String filtration2);
 
     //设置断开自动连接
     public abstract BluetoothBLeClass setAutoConnect(boolean isAutoConnect);
@@ -48,5 +48,8 @@ public abstract class BleBase {
 
     //通过此接口回调所有和蓝牙的交互出去给开发者
     public abstract void getBleCurrentState(BluetoothChangeListener bluetoothChangeListener);
+
+    //用于固件升级
+    public abstract void setUUID(String service_uuid, String notifi_uuid, String write_uuid);
 
 }

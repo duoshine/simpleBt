@@ -62,8 +62,8 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
         mBLE = BluetoothBLeClass.getInstane(MainActivity.this, "", "", "")
                 .setScanTime(5000)//设置扫描时间为5秒 不设置默认5秒
                 .setAutoConnect(false)//设置断开后自动连接
-                .closeCleanCache(true)//设置每次断开连接都清除缓存
-                .setFiltration("ANT");//设置过滤条件
+                .closeCleanCache(false)//设置每次断开连接都清除缓存
+                .setFiltration("Hod",null);//设置过滤条件
         if (!mBLE.initialize()) {
             //弹窗显示开启蓝牙
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);

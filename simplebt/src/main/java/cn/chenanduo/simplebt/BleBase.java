@@ -38,7 +38,7 @@ public abstract class BleBase {
     public abstract BluetoothBLeClass closeCleanCache(boolean isCloseCleanCache);
 
     //设置扫描过滤
-    public abstract BluetoothBLeClass setFiltration(String filtration);
+    public abstract BluetoothBLeClass setFiltration(String filtration1,String filtration2);
 
     //设置断开自动连接
     public abstract BluetoothBLeClass setAutoConnect(boolean isAutoConnect);

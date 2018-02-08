@@ -15,20 +15,20 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.RequiresApi;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
 import cn.chenanduo.simplebt.bean.DeviceBean;
+
 
 /**
  * Created by chen on 5/28/17.
@@ -78,8 +78,9 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     boolean exist = false;
     //每次断开连接是否清除缓存
     public static boolean isCloseCleanCache = false;
-    //过滤条件
-    public static String filtration = null;
+    //过滤条件  目前只支持两个条件过滤
+    public static String filtration1 = null;
+    public static String filtration2 = null;
     //写的uuid
     private BluetoothGattCharacteristic mWriteCharacteristic;
     //这个集合是为了过滤掉同设备 但是广播数据会一直刷新
@@ -103,13 +104,8 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         mBluetoothChangeListener = bluetoothChangeListener;
     }
 
-    //用于固件升级的情况下切换uuid
     @Override
     public void setUUID(String service_uuid, String notifi_uuid, String write_uuid) {
-        if (service_uuid == null || notifi_uuid == null || write_uuid == null) {
-            Log.e(TAG, "uuid不可以传null");
-            return;
-        }
         SERVICE_UUID = service_uuid;
         NOTIFI_UUID = notifi_uuid;
         WRITE_UUID = write_uuid;
@@ -166,8 +162,9 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
 
     //设置扫描过滤
     @Override
-    public BluetoothBLeClass setFiltration(String filtration) {
-        this.filtration = filtration;
+    public BluetoothBLeClass setFiltration(String filtration1, String filtration2) {
+        this.filtration1 = filtration1;
+        this.filtration2 = filtration2;
         return mBLE;
     }
 
@@ -183,6 +180,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
          */
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            Log.d(TAG, "断开状态码 : " + status);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 //连接上蓝牙设备
                 initConnected(gatt);
@@ -537,35 +535,41 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         String name = device.getName();
         if (null != name) {
             //设置了过滤
-            if (filtration != null) {
-                //过滤mac地址或者名称
-                if (name.contains(filtration) || address.contains(filtration)) {
-                    DeviceBean bean = new DeviceBean();
-                    bean.setName(name);
-                    bean.setAddress(address);
-                    bean.setRssi(rssi);
-                    bean.setScanRecord(scanRecord);
-                    map.put(address, bean);
+            if (!TextUtils.isEmpty(filtration1) || !TextUtils.isEmpty(filtration2)) {
+                //如果其中一个为null 下面的contains判断会空指针 所以在此判断 左边为Null 右边不执行
+                if (!TextUtils.isEmpty(filtration1) && name.contains(filtration1)) {
+                    putDevice(rssi, scanRecord, address, name);
+                }
+                if (!TextUtils.isEmpty(filtration2) && name.contains(filtration2)) {
+                    putDevice(rssi, scanRecord, address, name);
                 }
             } else {
                 //没有设置过滤
-                DeviceBean bean = new DeviceBean();
-                bean.setName(name);
-                bean.setAddress(address);
-                bean.setRssi(rssi);
-                bean.setScanRecord(scanRecord);
-                map.put(address, bean);
+                putDevice(rssi, scanRecord, address, name);
             }
-            Set<Map.Entry<String, DeviceBean>> entries = map.entrySet();
-            Iterator<Map.Entry<String, DeviceBean>> iterator = entries.iterator();
             datas.clear();
-            while (iterator.hasNext()) {
-                datas.add(iterator.next().getValue());
+            for (Map.Entry<String, DeviceBean> stringDeviceBeanEntry : map.entrySet()) {
+                datas.add(stringDeviceBeanEntry.getValue());
             }
-            if (mBluetoothChangeListener != null) {
-                mBluetoothChangeListener.onBleScanResult(datas);
-            }
+            //部分低端机中该方法运行在子线程  切换到主线程
+            ThreadUtils.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (mBluetoothChangeListener != null) {
+                        mBluetoothChangeListener.onBleScanResult(datas);
+                    }
+                }
+            });
         }
+    }
+
+    private void putDevice(int rssi, byte[] scanRecord, String address, String name) {
+        DeviceBean bean = new DeviceBean();
+        bean.setName(name);
+        bean.setAddress(address);
+        bean.setRssi(rssi);
+        bean.setScanRecord(scanRecord);
+        map.put(address, bean);
     }
 
     //返回当前设备连接状态
