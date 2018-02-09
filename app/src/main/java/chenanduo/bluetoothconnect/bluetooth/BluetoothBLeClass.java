@@ -20,12 +20,12 @@ import android.util.Log;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import chenanduo.bluetoothconnect.bean.DeviceBean;
 
@@ -84,7 +84,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     //写的uuid
     private BluetoothGattCharacteristic mWriteCharacteristic;
     //这个集合是为了过滤掉同设备 但是广播数据会一直刷新
-    private Map<String, DeviceBean> map = new HashMap<>();
+    private ConcurrentHashMap<String, DeviceBean> map = new ConcurrentHashMap<>();
     //这个集合是为了存放已经过滤好的设备 直接回调给外部
     private List<DeviceBean> datas = new ArrayList<>();
     //是否具备通信条件
@@ -369,6 +369,11 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     @Override
     public boolean connect(final String address) {
         if (mBluetoothAdapter == null || address == null) {
+            return false;
+        }
+        int bleConnectState = getBleConnectState();
+        if (bleConnectState == STATE_CONNECTED && mBluetoothDeviceAddress.equals(address)) {
+            Log.d(TAG, "同一设备不允许重复连接");
             return false;
         }
         stopScanDevices();
