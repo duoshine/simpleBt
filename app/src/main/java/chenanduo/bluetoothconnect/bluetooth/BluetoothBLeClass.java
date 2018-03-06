@@ -371,11 +371,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         if (mBluetoothAdapter == null || address == null) {
             return false;
         }
-        int bleConnectState = getBleConnectState();
-        if (bleConnectState == STATE_CONNECTED && mBluetoothDeviceAddress.equals(address)) {
-            Log.d(TAG, "同一设备不允许重复连接");
-            return false;
-        }
         stopScanDevices();
         /*设置状态连接中*/
         setBleCurrentState(STATE_CONNECTING);
@@ -541,32 +536,39 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         if (null != name) {
             //设置了过滤
             if (!TextUtils.isEmpty(filtration1) || !TextUtils.isEmpty(filtration2)) {
-                //如果其中一个为null 下面的contains判断会空指针
+                //如果其中一个为null 下面的contains判断还是会空指针 前一个判断非null 后面的判断就不会空指针
                 if (!TextUtils.isEmpty(filtration1) && name.contains(filtration1)) {
                     putDevice(rssi, scanRecord, address, name);
-                }
-
-                if (!TextUtils.isEmpty(filtration2) && name.contains(filtration2)) {
+                    //如果设置了过滤  只有过滤到需要的设备才回调出去
+                    onBleResult();
+                } else if (!TextUtils.isEmpty(filtration2) && name.contains(filtration2)) {
                     putDevice(rssi, scanRecord, address, name);
+                    //如果设置了过滤  只有过滤到需要的设备才回调出去
+                    onBleResult();
                 }
             } else {
                 //没有设置过滤
                 putDevice(rssi, scanRecord, address, name);
+                //没有设置过滤每次都回调出去
+                onBleResult();
             }
-            datas.clear();
-            for (Map.Entry<String, DeviceBean> stringDeviceBeanEntry : map.entrySet()) {
-                datas.add(stringDeviceBeanEntry.getValue());
-            }
-            //部分低端机中该方法运行在子线程  切换到主线程
-            ThreadUtils.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (mBluetoothChangeListener != null) {
-                        mBluetoothChangeListener.onBleScanResult(datas);
-                    }
-                }
-            });
         }
+    }
+
+    private void onBleResult() {
+        datas.clear();
+        for (Map.Entry<String, DeviceBean> stringDeviceBeanEntry : map.entrySet()) {
+            datas.add(stringDeviceBeanEntry.getValue());
+        }
+        //部分低端机中该方法运行在子线程  切换到主线程
+        ThreadUtils.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mBluetoothChangeListener != null) {
+                    mBluetoothChangeListener.onBleScanResult(datas);
+                }
+            }
+        });
     }
 
     private void putDevice(int rssi, byte[] scanRecord, String address, String name) {
