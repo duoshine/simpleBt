@@ -20,12 +20,12 @@ import android.util.Log;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import cn.chenanduo.simplebt.bean.DeviceBean;
 
@@ -84,7 +84,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     //写的uuid
     private BluetoothGattCharacteristic mWriteCharacteristic;
     //这个集合是为了过滤掉同设备 但是广播数据会一直刷新
-    private Map<String, DeviceBean> map = new HashMap<>();
+    private ConcurrentHashMap<String, DeviceBean> map = new ConcurrentHashMap<>();
     //这个集合是为了存放已经过滤好的设备 直接回调给外部
     private List<DeviceBean> datas = new ArrayList<>();
     //是否具备通信条件
@@ -536,31 +536,39 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         if (null != name) {
             //设置了过滤
             if (!TextUtils.isEmpty(filtration1) || !TextUtils.isEmpty(filtration2)) {
-                //如果其中一个为null 下面的contains判断会空指针 所以在此判断 左边为Null 右边不执行
+                //如果其中一个为null 下面的contains判断还是会空指针 前一个判断非null 后面的判断就不会空指针
                 if (!TextUtils.isEmpty(filtration1) && name.contains(filtration1)) {
                     putDevice(rssi, scanRecord, address, name);
-                }
-                if (!TextUtils.isEmpty(filtration2) && name.contains(filtration2)) {
+                    //如果设置了过滤  只有过滤到需要的设备才回调出去
+                    onBleResult();
+                } else if (!TextUtils.isEmpty(filtration2) && name.contains(filtration2)) {
                     putDevice(rssi, scanRecord, address, name);
+                    //如果设置了过滤  只有过滤到需要的设备才回调出去
+                    onBleResult();
                 }
             } else {
                 //没有设置过滤
                 putDevice(rssi, scanRecord, address, name);
+                //没有设置过滤每次都回调出去
+                onBleResult();
             }
-            datas.clear();
-            for (Map.Entry<String, DeviceBean> stringDeviceBeanEntry : map.entrySet()) {
-                datas.add(stringDeviceBeanEntry.getValue());
-            }
-            //部分低端机中该方法运行在子线程  切换到主线程
-            ThreadUtils.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (mBluetoothChangeListener != null) {
-                        mBluetoothChangeListener.onBleScanResult(datas);
-                    }
-                }
-            });
         }
+    }
+
+    private void onBleResult() {
+        datas.clear();
+        for (Map.Entry<String, DeviceBean> stringDeviceBeanEntry : map.entrySet()) {
+            datas.add(stringDeviceBeanEntry.getValue());
+        }
+        //部分低端机中该方法运行在子线程  切换到主线程
+        ThreadUtils.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                if (mBluetoothChangeListener != null) {
+                    mBluetoothChangeListener.onBleScanResult(datas);
+                }
+            }
+        });
     }
 
     private void putDevice(int rssi, byte[] scanRecord, String address, String name) {
