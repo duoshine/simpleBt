@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 25
-    buildToolsVersion "25.0.2"
+    buildToolsVersion "25.0.2"  //构建工具版本呢
     defaultConfig {
         applicationId "chenanduo.bluetoothconnect"
         minSdkVersion 18

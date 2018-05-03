@@ -1,4 +1,4 @@
-package chenanduo.bluetoothconnect.bluetooth;
+package chenanduo.bluetoothconnect.util;
 
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;

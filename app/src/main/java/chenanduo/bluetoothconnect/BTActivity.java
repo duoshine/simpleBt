@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Set;
 
 import chenanduo.bluetoothconnect.adapter.BTAdapter;
-import chenanduo.bluetoothconnect.bluetooth.BluetoothBTClass;
 
 
 public class BTActivity extends AppCompatActivity {

@@ -3,6 +3,7 @@ package chenanduo.bluetoothconnect;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothGatt;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -23,7 +24,8 @@ import java.util.List;
 import chenanduo.bluetoothconnect.bean.DeviceBean;
 import chenanduo.bluetoothconnect.bluetooth.BluetoothBLeClass;
 import chenanduo.bluetoothconnect.bluetooth.BluetoothChangeListener;
-import chenanduo.bluetoothconnect.bluetooth.DeviceShowDialog;
+import chenanduo.bluetoothconnect.util.DeviceShowDialog;
+import chenanduo.bluetoothconnect.util.Util;
 
 /**
  * Created by chen on 5/25/17...
@@ -59,11 +61,11 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     }
 
     private void init() {
-        mBLE = BluetoothBLeClass.getInstane(MainActivity.this, "", "", "")
+        mBLE = BluetoothBLeClass.getInstane(MainActivity.this, "F000C0E0-0451-4000-B000-000000000000", "F000C0E1-0451-4000-B000-000000000000", "F000C0E2-0451-4000-B000-000000000000")
                 .setScanTime(5000)//设置扫描时间为5秒 不设置默认5秒
                 .setAutoConnect(false)//设置断开后自动连接
-                .closeCleanCache(false)//设置每次断开连接都清除缓存
-                .setFiltration("Hod",null);//设置过滤条件
+                .closeCleanCache(true)//设置每次断开连接都清除缓存
+                .setFiltration(null, null);//设置过滤条件
         if (!mBLE.initialize()) {
             //弹窗显示开启蓝牙
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -87,7 +89,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             //收到蓝牙设备返回的数据
             @Override
             public void onBleWriteResult(byte[] result) {
-
+                tv_result.setText(Util.Bytes2HexString(result));
             }
 
             //扫描回调  集合就是扫描到的附近的设备
@@ -105,6 +107,23 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             @Override
             public void onWriteDataSucceed(byte[] value) {
 
+            }
+
+            /**
+             * 已经具备通信条件
+             */
+            @Override
+            public void findServiceSucceed() {
+                Log.d(TAG, "findServiceSucceed : 具备通信条件");
+            }
+
+            /**
+             * 服务查找完毕
+             * @param gatt
+             */
+            @Override
+            public void getDisplayServices(BluetoothGatt gatt) {
+                Log.d(TAG, "getDisplayServices : 服务已经查找完毕该服务有:" + gatt.getServices().size());
             }
         });
 
@@ -264,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     }
 
     private void showDialog() {
-        /*五秒后如果还没连接上就认为连接超时*/
+        /*六秒后如果还没连接上就认为连接超时*/
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -274,7 +293,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
                     mName.setText("连接超时");
                 }
             }
-        }, 5000);
+        }, 6000);
         mDialog = new ProgressDialog(MainActivity.this);
         mDialog.setMessage("正在连接...");
         mDialog.show();

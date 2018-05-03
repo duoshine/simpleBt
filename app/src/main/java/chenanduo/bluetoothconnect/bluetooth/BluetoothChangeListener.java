@@ -1,5 +1,7 @@
 package chenanduo.bluetoothconnect.bluetooth;
 
+import android.bluetooth.BluetoothGatt;
+
 import java.util.List;
 
 import chenanduo.bluetoothconnect.bean.DeviceBean;
@@ -20,4 +22,10 @@ public interface BluetoothChangeListener {
 
     //写入成功回调
     void onWriteDataSucceed(byte[] value);
+
+    //当服务已经找到 具备通信条件时回调
+    void findServiceSucceed();
+
+    //用于提供uuid
+     void getDisplayServices(BluetoothGatt gatt);
 }

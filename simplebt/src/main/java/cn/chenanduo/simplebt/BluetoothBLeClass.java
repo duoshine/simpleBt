@@ -94,6 +94,9 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     private BluetoothGattCharacteristic mNotifiCharacteristic;
     private boolean mIsSetCharacteristicNotification;
 
+    //用于不确定uuid的情况下 先扫描 后选择uuid再设置特征
+    private BluetoothGatt localGatt;
+
     /**
      * 通过此接口回调所有和蓝牙的交互出去给开发者
      *
@@ -180,7 +183,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
          */
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            Log.d(TAG, "断开状态码 : " + status);
+            Log.d(TAG, "onConnectionStateChange状态码 : " + status);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 //连接上蓝牙设备
                 initConnected(gatt);
@@ -198,7 +201,17 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                displayGattServices(gatt);
+                localGatt = gatt;
+                if (SERVICE_UUID != null || NOTIFI_UUID != null || WRITE_UUID != null) {
+                    Log.d(TAG, "onServicesDiscovered : uuid正确 设置uuid");
+                    displayGattServices(gatt, SERVICE_UUID, NOTIFI_UUID, WRITE_UUID);
+                }
+                /**
+                 * 用于告诉用户服务已经找到 如果先连接后设置uuid的用户就可以 显示这些uuid
+                 */
+                if (mBluetoothChangeListener != null) {
+                    mBluetoothChangeListener.getDisplayServices(gatt);
+                }
             }
         }
 
@@ -259,21 +272,17 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     };
 
     /*启动通知通道并将给定描述符的值写入到远程设备*/
-    private void displayGattServices(BluetoothGatt gatt) {
-        if (SERVICE_UUID == null || NOTIFI_UUID == null || WRITE_UUID == null) {
-            return;
-        }
-        BluetoothGattService service = gatt.getService(UUID.fromString(SERVICE_UUID));
+    private void displayGattServices(BluetoothGatt gatt, String service_uuid, String notifi_uuid, String write_uuid) {
+        BluetoothGattService service = gatt.getService(UUID.fromString(service_uuid));
         if (service == null) {
             return;
         }
-        mNotifiCharacteristic = service.getCharacteristic(UUID.fromString(NOTIFI_UUID));
+        mNotifiCharacteristic = service.getCharacteristic(UUID.fromString(notifi_uuid));
         if (mNotifiCharacteristic == null) {
             return;
         }
         //启用通知
         mIsSetCharacteristicNotification = mBluetoothGatt.setCharacteristicNotification(mNotifiCharacteristic, true);
-
         BluetoothGattDescriptor descriptor = mNotifiCharacteristic
                 .getDescriptor(UUID.fromString(DISENABLE));
         if (descriptor == null) {
@@ -284,7 +293,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         mIsWriteDescriptor = descriptor
                 .setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
         mBluetoothGatt.writeDescriptor(descriptor);
-
      /*   BluetoothGattDescriptor descriptor = notifiCharacteristic.getDescriptor(UUID.fromString(DISENABLE));
         if (descriptor != null) {
             descriptor.setValue(new byte[]{0x01});
@@ -292,12 +300,36 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
             mBluetoothGatt.writeDescriptor(descriptor);
         }*/
         //拿到写的uuid
-        mWriteCharacteristic = service.getCharacteristic(UUID.fromString(WRITE_UUID));
+        mWriteCharacteristic = service.getCharacteristic(UUID.fromString(write_uuid));
         if (mNotifiCharacteristic != null && mWriteCharacteristic != null) {
             Log.d(TAG, "通知和写特征找到,已具备通信条件!");
             //已经具备通信条件
             isCommunication = true;
+            //当具备通信条件后通知出去
+            if (mBluetoothChangeListener != null) {
+                mBluetoothChangeListener.findServiceSucceed();
+            }
         }
+    }
+
+    /**
+     * 先扫描后设置Uuid
+     *
+     * @param service_uuid
+     * @param notifi_uuid
+     * @param write_uuid
+     */
+    public boolean displayGattServices(String service_uuid, String notifi_uuid, String write_uuid) {
+        if (localGatt == null) {
+            Log.d(TAG, "displayGattServices : 服务还未查找到");
+            return false;
+        }
+        if (service_uuid == null || notifi_uuid == null || write_uuid == null) {
+            Log.d(TAG, "displayGattServices : uuid不可以为null");
+            return false;
+        }
+        displayGattServices(localGatt, service_uuid, notifi_uuid, write_uuid);
+        return true;
     }
 
     /*处理连接上蓝牙设备的逻辑*/
@@ -319,7 +351,8 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         runonUiThread(STATE_DISCONNECTED);
         //判断用户是否开启了每次断开连接都清除缓存
         if (isCloseCleanCache) {
-            refreshDeviceCache();
+            boolean b = refreshDeviceCache();
+            Log.d(TAG, "清除缓存结果" + b);
         }
         //如果用户开启自动重连 且蓝牙是断开连接状态会走进去
         if (isAutoConnect && !isBleConnect) {

@@ -1,4 +1,4 @@
-package chenanduo.bluetoothconnect.bluetooth;
+package chenanduo.bluetoothconnect.util;
 /************************************ 蓝牙配对函数 * **************/
 
 import android.bluetooth.BluetoothDevice;

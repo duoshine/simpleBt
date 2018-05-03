@@ -1,4 +1,4 @@
-package chenanduo.bluetoothconnect.bluetooth;
+package chenanduo.bluetoothconnect.util;
 
 import android.app.Activity;
 import android.app.AlertDialog;

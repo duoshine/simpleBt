@@ -52,4 +52,5 @@ public abstract class BleBase {
     //用于固件升级
     public abstract void setUUID(String service_uuid, String notifi_uuid, String write_uuid);
 
+
 }
