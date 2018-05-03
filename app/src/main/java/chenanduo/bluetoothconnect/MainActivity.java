@@ -61,10 +61,10 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     }
 
     private void init() {
-        mBLE = BluetoothBLeClass.getInstane(MainActivity.this, "F000C0E0-0451-4000-B000-000000000000", "F000C0E1-0451-4000-B000-000000000000", "F000C0E2-0451-4000-B000-000000000000")
+        mBLE = BluetoothBLeClass.getInstane(MainActivity.this, "", "", "")
                 .setScanTime(5000)//设置扫描时间为5秒 不设置默认5秒
                 .setAutoConnect(false)//设置断开后自动连接
-                .closeCleanCache(true)//设置每次断开连接都清除缓存
+                .closeCleanCache(false)//设置每次断开连接都清除缓存
                 .setFiltration(null, null);//设置过滤条件
         if (!mBLE.initialize()) {
             //弹窗显示开启蓝牙
@@ -114,7 +114,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
              */
             @Override
             public void findServiceSucceed() {
-                Log.d(TAG, "findServiceSucceed : 具备通信条件");
+                Log.d(TAG, "findServiceSucceed : 具备通信条件 可以开始通信拉...");
             }
 
             /**
@@ -123,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
              */
             @Override
             public void getDisplayServices(BluetoothGatt gatt) {
-                Log.d(TAG, "getDisplayServices : 服务已经查找完毕该服务有:" + gatt.getServices().size());
+                Log.d(TAG, "getDisplayServices : 服务已经查找完毕该服务有:" + gatt.getServices().size() + "个service");
             }
         });
 
