@@ -1,10 +1,8 @@
-package chenanduo.bluetoothconnect.bluetooth;
+package chenanduo.bluetoothconnect.github;
 
 import android.bluetooth.BluetoothGatt;
 
 import java.util.List;
-
-import chenanduo.bluetoothconnect.bean.DeviceBean;
 
 /**
  * Created by chen on 2017  封装了和蓝牙的交互函数

@@ -4,9 +4,6 @@ import android.bluetooth.BluetoothGatt;
 
 import java.util.List;
 
-import cn.chenanduo.simplebt.bean.DeviceBean;
-
-
 /**
  * Created by chen on 2017  封装了和蓝牙的交互函数
  */

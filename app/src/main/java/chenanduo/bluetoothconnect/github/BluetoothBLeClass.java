@@ -1,4 +1,4 @@
-package chenanduo.bluetoothconnect.bluetooth;
+package chenanduo.bluetoothconnect.github;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothAdapter.LeScanCallback;
@@ -20,15 +20,15 @@ import android.util.Log;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-import chenanduo.bluetoothconnect.bean.DeviceBean;
 import chenanduo.bluetoothconnect.util.ThreadUtils;
+import chenanduo.bluetoothconnect.util.Util;
 
 
 /**
@@ -85,7 +85,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     //写的uuid
     private BluetoothGattCharacteristic mWriteCharacteristic;
     //这个集合是为了过滤掉同设备 但是广播数据会一直刷新
-    private ConcurrentHashMap<String, DeviceBean> map = new ConcurrentHashMap<>();
+    private Map<String, DeviceBean> map = new HashMap<>();
     //这个集合是为了存放已经过滤好的设备 直接回调给外部
     private List<DeviceBean> datas = new ArrayList<>();
     //是否具备通信条件
@@ -200,7 +200,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
          * @param status
          */
         @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+        public void onServicesDiscovered(final BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 localGatt = gatt;
                 if (SERVICE_UUID != null || NOTIFI_UUID != null || WRITE_UUID != null) {
@@ -210,9 +210,14 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
                 /**
                  * 用于告诉用户服务已经找到 如果先连接后设置uuid的用户就可以 显示这些uuid
                  */
-                if (mBluetoothChangeListener != null) {
-                    mBluetoothChangeListener.getDisplayServices(gatt);
-                }
+                ThreadUtils.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (mBluetoothChangeListener != null) {
+                            mBluetoothChangeListener.getDisplayServices(gatt);
+                        }
+                    }
+                });
             }
         }
 
@@ -307,9 +312,14 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
             //已经具备通信条件
             isCommunication = true;
             //当具备通信条件后通知出去
-            if (mBluetoothChangeListener != null) {
-                mBluetoothChangeListener.findServiceSucceed();
-            }
+            ThreadUtils.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (mBluetoothChangeListener != null) {
+                        mBluetoothChangeListener.findServiceSucceed();
+                    }
+                }
+            });
         }
     }
 
@@ -561,6 +571,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     /*扫描结果  此方法应尽量避免耗时操作*/
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
+        Log.d(TAG, "onLeScan : " + Util.isMainThread());
         /**
          * 需求是扫描的蓝牙不重复 但是广播需要一直传递出去
          * 1.获取到对应的广播
@@ -594,6 +605,9 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         for (Map.Entry<String, DeviceBean> stringDeviceBeanEntry : map.entrySet()) {
             datas.add(stringDeviceBeanEntry.getValue());
         }
+        if (mBluetoothChangeListener != null) {
+            mBluetoothChangeListener.onBleScanResult(datas);
+        }
         //部分低端机中该方法运行在子线程  切换到主线程
         ThreadUtils.runOnUiThread(new Runnable() {
             @Override
@@ -610,7 +624,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         bean.setName(name);
         bean.setAddress(address);
         bean.setRssi(rssi);
-        bean.setScanRecord(scanRecord);
+        bean.setScanRecord(Util.Bytes2HexString(scanRecord));
         map.put(address, bean);
     }
 

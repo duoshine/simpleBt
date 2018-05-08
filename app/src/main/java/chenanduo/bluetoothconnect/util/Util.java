@@ -1,5 +1,7 @@
 package chenanduo.bluetoothconnect.util;
 
+import android.os.Looper;
+
 import java.io.ByteArrayOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -24,6 +26,10 @@ public class Util {
             ret += hex.toUpperCase() + " ";
         }
         return ret;
+    }
+
+    public static  boolean isMainThread() {
+        return Looper.getMainLooper().getThread().getId() == Thread.currentThread().getId();
     }
 
     /**

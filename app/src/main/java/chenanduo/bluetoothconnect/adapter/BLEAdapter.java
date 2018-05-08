@@ -12,7 +12,7 @@ import android.widget.TextView;
 import java.util.List;
 
 import chenanduo.bluetoothconnect.R;
-import chenanduo.bluetoothconnect.bean.DeviceBean;
+import chenanduo.bluetoothconnect.github.DeviceBean;
 
 
 public class BLEAdapter extends BaseAdapter {

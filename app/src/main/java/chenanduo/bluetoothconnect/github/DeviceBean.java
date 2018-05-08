@@ -1,4 +1,4 @@
-package chenanduo.bluetoothconnect.bean;
+package chenanduo.bluetoothconnect.github;
 
 /**
  * Created by chen on 2017
@@ -11,7 +11,7 @@ public class DeviceBean {
 
     private int rssi;
 
-    private byte[] scanRecord;
+    private String scanRecord;
 
     public String getName() {
         return name;
@@ -37,11 +37,11 @@ public class DeviceBean {
         this.rssi = rssi;
     }
 
-    public byte[] getScanRecord() {
+    public String getScanRecord() {
         return scanRecord;
     }
 
-    public void setScanRecord(byte[] scanRecord) {
+    public void setScanRecord(String scanRecord) {
         this.scanRecord = scanRecord;
     }
 }

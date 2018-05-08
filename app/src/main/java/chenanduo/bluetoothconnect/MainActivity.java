@@ -21,10 +21,11 @@ import android.widget.Toast;
 
 import java.util.List;
 
-import chenanduo.bluetoothconnect.bean.DeviceBean;
-import chenanduo.bluetoothconnect.bluetooth.BluetoothBLeClass;
-import chenanduo.bluetoothconnect.bluetooth.BluetoothChangeListener;
+import chenanduo.bluetoothconnect.github.BluetoothBLeClass;
+import chenanduo.bluetoothconnect.github.BluetoothChangeListener;
+import chenanduo.bluetoothconnect.github.DeviceBean;
 import chenanduo.bluetoothconnect.util.DeviceShowDialog;
+import chenanduo.bluetoothconnect.util.ThreadUtils;
 import chenanduo.bluetoothconnect.util.Util;
 
 /**
@@ -95,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             //扫描回调  集合就是扫描到的附近的设备
             @Override
             public void onBleScanResult(List<DeviceBean> device) {
+                Log.d(TAG, "线程 : " + Util.isMainThread());
                 if (keysSelectDialog.isShowing()) {
                     keysSelectDialog.notifyDataSetChanged(device);
                 }
@@ -132,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             @Override
             public void onCancel(DialogInterface dialog) {
                 if (mBLE != null) {
-                    mBLE.startScanDevices(false);
+                   startScan(false);
                 }
             }
         });
@@ -196,9 +198,18 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     //选择
     private void reSearchKeys() {
         //开始扫描
-        mBLE.startScanDevices(true);
+        startScan(true);
         //一定要做清除状态
         keysSelectDialog.clear();
+    }
+
+    private void startScan(final boolean isScan) {
+        ThreadUtils.runOnSubThread(new Runnable() {
+            @Override
+            public void run() {
+                mBLE.startScanDevices(isScan);
+            }
+        });
     }
 
     //6.0权限机制  蓝牙要精确定位位置
