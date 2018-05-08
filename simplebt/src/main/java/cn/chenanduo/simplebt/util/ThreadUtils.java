@@ -1,4 +1,4 @@
-package cn.chenanduo.simplebt;
+package cn.chenanduo.simplebt.util;
 
 import android.os.Handler;
 import android.os.Looper;

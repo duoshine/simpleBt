@@ -27,7 +27,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
-import chenanduo.bluetoothconnect.util.Util;
+import cn.chenanduo.simplebt.util.ThreadUtils;
+import cn.chenanduo.simplebt.util.Util;
 
 
 /**
@@ -570,7 +571,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     /*扫描结果  此方法应尽量避免耗时操作*/
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-        Log.d(TAG, "onLeScan : " + Util.isMainThread());
         /**
          * 需求是扫描的蓝牙不重复 但是广播需要一直传递出去
          * 1.获取到对应的广播
