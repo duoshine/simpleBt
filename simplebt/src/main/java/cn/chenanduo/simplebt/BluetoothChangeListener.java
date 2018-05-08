@@ -18,7 +18,7 @@ public interface BluetoothChangeListener {
     void onBleWriteResult(byte[] result);
 
     //扫描回调
-    void onBleScanResult(List<DeviceBean.DeviceBean> device);
+    void onBleScanResult(List<DeviceBean> device);
 
     //写入成功回调
     void onWriteDataSucceed(byte[] value);

@@ -86,9 +86,9 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     //写的uuid
     private BluetoothGattCharacteristic mWriteCharacteristic;
     //这个集合是为了过滤掉同设备 但是广播数据会一直刷新
-    private Map<String, cn.chenanduo.simplebt.bean.DeviceBean.DeviceBean> map = new HashMap<>();
+    private Map<String, DeviceBean> map = new HashMap<>();
     //这个集合是为了存放已经过滤好的设备 直接回调给外部
-    private List<cn.chenanduo.simplebt.bean.DeviceBean.DeviceBean> datas = new ArrayList<>();
+    private List<DeviceBean> datas = new ArrayList<>();
     //是否具备通信条件
     private boolean isCommunication;
     private BluetoothChangeListener mBluetoothChangeListener;
@@ -602,7 +602,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
 
     private void onBleResult() {
         datas.clear();
-        for (Map.Entry<String, cn.chenanduo.simplebt.bean.DeviceBean.DeviceBean> stringDeviceBeanEntry : map.entrySet()) {
+        for (Map.Entry<String, DeviceBean> stringDeviceBeanEntry : map.entrySet()) {
             datas.add(stringDeviceBeanEntry.getValue());
         }
         if (mBluetoothChangeListener != null) {
@@ -620,7 +620,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     }
 
     private void putDevice(int rssi, byte[] scanRecord, String address, String name) {
-        cn.chenanduo.simplebt.bean.DeviceBean.DeviceBean bean = new DeviceBean.DeviceBean();
+        DeviceBean bean = new DeviceBean();
         bean.setName(name);
         bean.setAddress(address);
         bean.setRssi(rssi);

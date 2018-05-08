@@ -11,7 +11,7 @@ public class DeviceBean {
 
     private int rssi;
 
-    private byte[] scanRecord;
+    private String scanRecord;
 
     public String getName() {
         return name;
@@ -37,57 +37,11 @@ public class DeviceBean {
         this.rssi = rssi;
     }
 
-    public byte[] getScanRecord() {
+    public String getScanRecord() {
         return scanRecord;
     }
 
-    public void setScanRecord(byte[] scanRecord) {
+    public void setScanRecord(String scanRecord) {
         this.scanRecord = scanRecord;
-    }
-
-    /**
-     * Created by chen on 2017
-     */
-
-    public static class DeviceBean {
-        private String name;
-
-        private String address;
-
-        private int rssi;
-
-        private String scanRecord;
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getAddress() {
-            return address;
-        }
-
-        public void setAddress(String address) {
-            this.address = address;
-        }
-
-        public int getRssi() {
-            return rssi;
-        }
-
-        public void setRssi(int rssi) {
-            this.rssi = rssi;
-        }
-
-        public String getScanRecord() {
-            return scanRecord;
-        }
-
-        public void setScanRecord(String scanRecord) {
-            this.scanRecord = scanRecord;
-        }
     }
 }
