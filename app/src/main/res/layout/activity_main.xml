@@ -4,32 +4,40 @@
               android:layout_height="match_parent"
               android:orientation="vertical"
     >
-<Button
-    android:id="@+id/btnScan"
-    android:layout_width="match_parent"
-    android:text="扫描设备"
-    android:layout_height="wrap_content"/>
 
     <Button
+        android:id="@+id/btnScan"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="扫描设备"/>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:onClick="text"
+        android:text="测试"/>
+
+    <TextView
+        android:id="@+id/tvName"
         android:layout_width="match_parent"
-        android:text="测试"
-        android:layout_height="wrap_content"/>
-<TextView
-    android:id="@+id/tvName"
-    android:layout_width="match_parent"
-    android:text="没有连接设备"
-    android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:text="没有连接设备"/>
 
     <Button
-        android:onClick="btn_send"
         android:layout_width="match_parent"
-        android:text="发送指令"
-        android:layout_height="wrap_content"/>
+        android:layout_height="wrap_content"
+        android:onClick="btn_send"
+        android:text="发送指令"/>
 
     <TextView
         android:id="@+id/tv_result"
         android:layout_width="match_parent"
-        android:text="接收:"
+        android:layout_height="wrap_content"
+        android:text="接收:"/>
+
+    <Button
+        android:text="测试断开及时性"
+        android:onClick="btn_textHander"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 </LinearLayout>

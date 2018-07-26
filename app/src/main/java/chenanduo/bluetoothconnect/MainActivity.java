@@ -29,7 +29,7 @@ import chenanduo.bluetoothconnect.util.ThreadUtils;
 import chenanduo.bluetoothconnect.util.Util;
 
 /**
- * Created by chen on 5/25/17...
+ * Created by chen on 5/25/17...  测试用类
  */
 public class MainActivity extends AppCompatActivity implements DeviceShowDialog.OnKeySelectedListener, View.OnClickListener {
     private static final int REQUEST_PERMISSION_ACCESS_LOCATION = 2;
@@ -61,12 +61,20 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
         mBtnScan.setOnClickListener(this);
     }
 
+    private String service = "0000fff0-0000-1000-8000-00805f9b34fb";
+    private String notifi = "0000fff1-0000-1000-8000-00805f9b34fb";
+
+    public static final String SERVICE_UUID = ("F000C0E0-0451-4000-B000-000000000000");//服务
+    protected static final String NOTIFICATION_UUID = ("F000C0E1-0451-4000-B000-000000000000");//接收
+    public static String WRITE_UUID = "F000C0E2-0451-4000-B000-000000000000";//发送
+
+
     private void init() {
-        mBLE = BluetoothBLeClass.getInstane(MainActivity.this, "", "", "")
+        mBLE = BluetoothBLeClass.getInstane(MainActivity.this, service, notifi, notifi)
                 .setScanTime(5000)//设置扫描时间为5秒 不设置默认5秒
                 .setAutoConnect(false)//设置断开后自动连接
                 .closeCleanCache(false)//设置每次断开连接都清除缓存
-                .setFiltration(null, null);//设置过滤条件
+                .setFiltration("SHTT", "TK");//设置过滤条件
         if (!mBLE.initialize()) {
             //弹窗显示开启蓝牙
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -96,7 +104,6 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             //扫描回调  集合就是扫描到的附近的设备
             @Override
             public void onBleScanResult(List<DeviceBean> device) {
-                Log.d(TAG, "线程 : " + Util.isMainThread());
                 if (keysSelectDialog.isShowing()) {
                     keysSelectDialog.notifyDataSetChanged(device);
                 }
@@ -134,7 +141,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             @Override
             public void onCancel(DialogInterface dialog) {
                 if (mBLE != null) {
-                   startScan(false);
+                    startScan(false);
                 }
             }
         });
@@ -282,14 +289,19 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
 
     /*发送指令*/
     public void btn_send(View view) {
-        byte[] bytes = {0x01, 0x00, (byte) 0xFF};
+       byte[] bytes = {0x7E,0x35,0x30,0x30,0x31,0x38,0x30,0x39,0x33,0x30,0x30,0x30,0x30,0x44,0x46,0x41,0x36,0x0D};
+        //byte[] bytes = {0x01,0x00, (byte) 0xFF};
         write(bytes);
     }
 
     /*发送指令 */
     public void write(byte[] bytes) {
         if (mBLE != null) {
-            mBLE.writeCharacteristic(bytes);
+            if (mBLE.writeCharacteristic(bytes)) {
+                Log.d(TAG, "write : 发送成功");
+            } else {
+                Log.d(TAG, "write : 发送失败");
+            }
         }
     }
 
@@ -317,11 +329,13 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     }
 
     public void text(View view) {
-        String str = "b:A0：50：";
-        if (str.contains("B")) {
-            Log.d(TAG, "text : 我包含");
-        } else {
-            Log.d(TAG, "text : 我不包含");
-        }
+        boolean a  = true;
+        if (a)
+            Log.d(TAG, "true : " );
+        Log.d(TAG, "false : " );
+    }
+
+    public void btn_textHander(View view) {
+
     }
 }

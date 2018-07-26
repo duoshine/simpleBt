@@ -6,7 +6,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
@@ -20,7 +19,7 @@ import android.util.Log;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
@@ -85,13 +84,12 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     //写的uuid
     private BluetoothGattCharacteristic mWriteCharacteristic;
     //这个集合是为了过滤掉同设备 但是广播数据会一直刷新
-    private Map<String, DeviceBean> map = new HashMap<>();
+    private Map<String, DeviceBean> map = new LinkedHashMap<>();
     //这个集合是为了存放已经过滤好的设备 直接回调给外部
     private List<DeviceBean> datas = new ArrayList<>();
     //是否具备通信条件
     private boolean isCommunication;
     private BluetoothChangeListener mBluetoothChangeListener;
-    private boolean mIsWriteDescriptor;
     private BluetoothGattCharacteristic mNotifiCharacteristic;
     private boolean mIsSetCharacteristicNotification;
 
@@ -184,7 +182,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
          */
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            Log.d(TAG, "onConnectionStateChange状态码 : " + status);
+            Log.d(TAG, "newState : " + newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 //连接上蓝牙设备
                 initConnected(gatt);
@@ -195,7 +193,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         }
 
         /**
-         * 搜索周边服务
+         * 调用discoverServices发现远程设备提供的服务及其服务特诊和描述符 触发该回调
          * @param gatt
          * @param status
          */
@@ -228,7 +226,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         }
 
         /**
-         * ble终端数据交互的事件
+         * readCharacteristic从关联的远程设备读取请求的特征后触发
          * @param gatt
          * @param characteristic
          * @param status
@@ -240,7 +238,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         }
 
         /**
-         * 收到ble返回数据
+         * 收到ble返回数据 setCharacteristicNotification 设置通知特征后才会触发
          * @param gatt
          * @param characteristic
          */
@@ -258,7 +256,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         }
 
         /**
-         * 写入数据成功回调此方法
+         * 在调用writeCharacteristic后触发
          * @param gatt
          * @param characteristic
          * @param status
@@ -289,17 +287,18 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         }
         //启用通知
         mIsSetCharacteristicNotification = mBluetoothGatt.setCharacteristicNotification(mNotifiCharacteristic, true);
-        BluetoothGattDescriptor descriptor = mNotifiCharacteristic
+   /*    BluetoothGattDescriptor descriptor = mNotifiCharacteristic
                 .getDescriptor(UUID.fromString(DISENABLE));
         if (descriptor == null) {
             descriptor = new BluetoothGattDescriptor(
                     UUID.fromString(DISENABLE),
                     BluetoothGattDescriptor.PERMISSION_WRITE);
         }
-        mIsWriteDescriptor = descriptor
-                .setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        mBluetoothGatt.writeDescriptor(descriptor);
-     /*   BluetoothGattDescriptor descriptor = notifiCharacteristic.getDescriptor(UUID.fromString(DISENABLE));
+     descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);*/
+
+
+        //mBluetoothGatt.writeDescriptor(descriptor); //todo 注意这里只是修改一下还要解开注释 注释临时为了解决问题
+        /*BluetoothGattDescriptor descriptor = mNotifiCharacteristic.getDescriptor(UUID.fromString(DISENABLE));
         if (descriptor != null) {
             descriptor.setValue(new byte[]{0x01});
             //将给定描述符的值写入到远程设备。
@@ -404,7 +403,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     @Override
     public boolean initialize() {
         //判断是否开启蓝牙  如果没有开启 弹窗提示用户开启蓝牙
-        return mBluetoothAdapter.isEnabled() ? true : false;
+        return mBluetoothAdapter.isEnabled();
     }
 
     /*
@@ -451,6 +450,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         //不具备通信条件
         isCommunication = false;
         mBluetoothGatt.disconnect();
+
     }
 
     /*
@@ -458,7 +458,9 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
      */
     @Override
     public void close() {
+        //自动连接
         isAutoConnect = false;
+        //蓝牙是否连接
         isBleConnect = false;
         //不具备通信条件了
         isCommunication = false;
@@ -509,6 +511,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
+                    //扫描结束
                     mScanning = false;
                     mBluetoothAdapter.stopLeScan(BluetoothBLeClass.this);
                     ThreadUtils.runOnUiThread(new Runnable() {
@@ -517,9 +520,10 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
                             setScanfinish();
                         }
                     });
-                    Log.d(TAG, "停止扫描");
+                    Log.d(TAG, "时间到停止扫描");
                 }
             }, SCAN_PERIOD);
+            //扫描中
             mScanning = true;
             mBluetoothAdapter.startLeScan(BluetoothBLeClass.this);
             //设置状态扫描中
@@ -546,6 +550,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
             mBluetoothAdapter.cancelDiscovery();
             mScanning = false;
             setScanfinish();
+            //防止连续点击多次扫描而导致的多个定时任务
             mHandler.removeCallbacksAndMessages(null);
         }
     }
@@ -571,7 +576,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     /*扫描结果  此方法应尽量避免耗时操作*/
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-        Log.d(TAG, "onLeScan : " + Util.isMainThread());
         /**
          * 需求是扫描的蓝牙不重复 但是广播需要一直传递出去
          * 1.获取到对应的广播
