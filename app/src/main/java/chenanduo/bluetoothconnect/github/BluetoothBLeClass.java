@@ -6,7 +6,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
@@ -288,7 +287,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         }
         //启用通知
         mIsSetCharacteristicNotification = mBluetoothGatt.setCharacteristicNotification(mNotifiCharacteristic, true);
-        BluetoothGattDescriptor descriptor = mNotifiCharacteristic
+       /* BluetoothGattDescriptor descriptor = mNotifiCharacteristic
                 .getDescriptor(UUID.fromString(DISENABLE));
         if (descriptor == null) {
             descriptor = new BluetoothGattDescriptor(
@@ -296,7 +295,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
                     BluetoothGattDescriptor.PERMISSION_WRITE);
         }
         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        boolean b = mBluetoothGatt.writeDescriptor(descriptor);//todo 注意这里只是修改一下还要解开注释 注释临时为了解决问题
+        boolean b = mBluetoothGatt.writeDescriptor(descriptor)*/;//todo 注意这里只是修改一下还要解开注释 注释临时为了解决问题
 
 
         /*BluetoothGattDescriptor descriptor = mNotifiCharacteristic.getDescriptor(UUID.fromString(DISENABLE));
