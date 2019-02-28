@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
@@ -14,20 +15,14 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.RequiresApi;
-import android.text.TextUtils;
 import android.util.Log;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
 import chenanduo.bluetoothconnect.util.ThreadUtils;
-import chenanduo.bluetoothconnect.util.Util;
 
 
 /**
@@ -83,10 +78,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     public static String filtration2 = null;
     //写的uuid
     private BluetoothGattCharacteristic mWriteCharacteristic;
-    //这个集合是为了过滤掉同设备 但是广播数据会一直刷新
-    private Map<String, DeviceBean> map = new LinkedHashMap<>();
-    //这个集合是为了存放已经过滤好的设备 直接回调给外部
-    private List<DeviceBean> datas = new ArrayList<>();
     //是否具备通信条件
     private boolean isCommunication;
     private BluetoothChangeListener mBluetoothChangeListener;
@@ -162,14 +153,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         return mBLE;
     }
 
-    //设置扫描过滤
-    @Override
-    public BluetoothBLeClass setFiltration(String filtration1, String filtration2) {
-        this.filtration1 = filtration1;
-        this.filtration2 = filtration2;
-        return mBLE;
-    }
-
     /**
      * 通过实现此callBack管理和Ble交互
      */
@@ -222,7 +205,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             super.onMtuChanged(gatt, mtu, status);
-
         }
 
         /**
@@ -271,7 +253,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
                     }
                 });
             }
-            Log.d(TAG, "写入蓝牙设备成功!");
         }
     };
 
@@ -287,15 +268,19 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         }
         //启用通知
         mIsSetCharacteristicNotification = mBluetoothGatt.setCharacteristicNotification(mNotifiCharacteristic, true);
-       /* BluetoothGattDescriptor descriptor = mNotifiCharacteristic
+
+        //描述特诊和控制特诊的某些行为 BluetoothGattDescriptor  比如开启通知(我之前就遇到过设备通知是需要开启的)
+        BluetoothGattDescriptor descriptor = mNotifiCharacteristic
+                //返回给定uuid的描述符
                 .getDescriptor(UUID.fromString(DISENABLE));
         if (descriptor == null) {
             descriptor = new BluetoothGattDescriptor(
                     UUID.fromString(DISENABLE),
                     BluetoothGattDescriptor.PERMISSION_WRITE);
         }
+        //更新此描述符的本地存储值
         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        boolean b = mBluetoothGatt.writeDescriptor(descriptor)*/;//todo 注意这里只是修改一下还要解开注释 注释临时为了解决问题
+        mBluetoothGatt.writeDescriptor(descriptor);//todo 注意这里只是修改一下还要解开注释 注释临时为了解决问题
 
 
         /*BluetoothGattDescriptor descriptor = mNotifiCharacteristic.getDescriptor(UUID.fromString(DISENABLE));
@@ -435,6 +420,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         }
         // 想直接连接设备传入false
         mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback);
+
         mBluetoothDeviceAddress = address;
         return true;
     }
@@ -489,7 +475,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
             return false;
         }
         //TODO 待测试 数据大于20字节 可以自动分包
-        //characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+        mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
         //设置数据内容
         mWriteCharacteristic.setValue(value);
         //往蓝牙模块写入数据
@@ -505,8 +491,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     public void startScanDevices(final boolean enable) {
         //五秒后停止扫描
         if (enable) {
-            //开始扫描前清空集合 并停止上一次扫描
-            map.clear();
             stopScanDevices();
             mHandler.postDelayed(new Runnable() {
                 @Override
@@ -573,63 +557,12 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         }
     }
 
-    /*扫描结果  此方法应尽量避免耗时操作*/
+    /*扫描结果  此方法应尽量避免耗时操作  synchronized*/
     @Override
     public void onLeScan(BluetoothDevice device, int rssi, byte[] scanRecord) {
-        /**
-         * 需求是扫描的蓝牙不重复 但是广播需要一直传递出去
-         * 1.获取到对应的广播
-         */
-        String address = device.getAddress();
-        String name = device.getName();
-        if (null != name) {
-            //设置了过滤
-            if (!TextUtils.isEmpty(filtration1) || !TextUtils.isEmpty(filtration2)) {
-                //如果其中一个为null 下面的contains判断还是会空指针 前一个判断非null 后面的判断就不会空指针
-                if (!TextUtils.isEmpty(filtration1) && name.contains(filtration1)) {
-                    putDevice(rssi, scanRecord, address, name);
-                    //如果设置了过滤  只有过滤到需要的设备才回调出去
-                    onBleResult();
-                } else if (!TextUtils.isEmpty(filtration2) && name.contains(filtration2)) {
-                    putDevice(rssi, scanRecord, address, name);
-                    //如果设置了过滤  只有过滤到需要的设备才回调出去
-                    onBleResult();
-                }
-            } else {
-                //没有设置过滤
-                putDevice(rssi, scanRecord, address, name);
-                //没有设置过滤每次都回调出去
-                onBleResult();
-            }
-        }
-    }
-
-    private void onBleResult() {
-        datas.clear();
-        for (Map.Entry<String, DeviceBean> stringDeviceBeanEntry : map.entrySet()) {
-            datas.add(stringDeviceBeanEntry.getValue());
-        }
         if (mBluetoothChangeListener != null) {
-            mBluetoothChangeListener.onBleScanResult(datas);
+            mBluetoothChangeListener.onBleScanResult(device);
         }
-        //部分低端机中该方法运行在子线程  切换到主线程
-        ThreadUtils.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                if (mBluetoothChangeListener != null) {
-                    mBluetoothChangeListener.onBleScanResult(datas);
-                }
-            }
-        });
-    }
-
-    private void putDevice(int rssi, byte[] scanRecord, String address, String name) {
-        DeviceBean bean = new DeviceBean();
-        bean.setName(name);
-        bean.setAddress(address);
-        bean.setRssi(rssi);
-        bean.setScanRecord(Util.Bytes2HexString(scanRecord));
-        map.put(address, bean);
     }
 
     //返回当前设备连接状态

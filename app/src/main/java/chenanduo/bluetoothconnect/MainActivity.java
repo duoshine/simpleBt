@@ -3,6 +3,7 @@ package chenanduo.bluetoothconnect;
 import android.Manifest;
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,6 +11,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -19,14 +21,13 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import chenanduo.bluetoothconnect.github.BluetoothBLeClass;
 import chenanduo.bluetoothconnect.github.BluetoothChangeListener;
-import chenanduo.bluetoothconnect.github.DeviceBean;
 import chenanduo.bluetoothconnect.util.DeviceShowDialog;
 import chenanduo.bluetoothconnect.util.ThreadUtils;
-import chenanduo.bluetoothconnect.util.Util;
 
 /**
  * Created by chen on 5/25/17...  测试用类
@@ -42,9 +43,12 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     private TextView tv_result;
     private ProgressDialog mDialog;
     private Handler handler = new Handler();
-
+    private List<BluetoothDevice>devicesList  = new ArrayList<>();
     //当前正在连接的蓝牙设备名称
     private static String currentConnectBle = null;
+    private boolean isSuccess;
+    private List<byte[]> mDatas = new ArrayList<>();
+    private long mStartTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +58,26 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
         init();
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+      /*  new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                finish();
+            }
+        }, 200);*/
+        //        finish();
+    }
+
+    private void initData() {
+        mDatas.clear();
+        for (int i = 0; i < 6; i++) {
+            byte[] data1 = {(byte) i, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, (byte) 0xff};
+            mDatas.add(data1);
+        }
+    }
+
     private void initView() {
         mBtnScan = (Button) findViewById(R.id.btnScan);
         mName = (TextView) findViewById(R.id.tvName);
@@ -61,20 +85,21 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
         mBtnScan.setOnClickListener(this);
     }
 
-    private String service = "0000fff0-0000-1000-8000-00805f9b34fb";
-    private String notifi = "0000fff1-0000-1000-8000-00805f9b34fb";
+/*    public static final String SERVICE_UUID = ("6e400001-b5a3-f393-e0a9-e50e24dcca9e");//服务
+    protected static final String NOTIFICATION_UUID = ("6e400003-b5a3-f393-e0a9-e50e24dcca9e");//接收
+    public static String WRITE_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";//发送*/
 
-    public static final String SERVICE_UUID = ("F000C0E0-0451-4000-B000-000000000000");//服务
-    protected static final String NOTIFICATION_UUID = ("F000C0E1-0451-4000-B000-000000000000");//接收
-    public static String WRITE_UUID = "F000C0E2-0451-4000-B000-000000000000";//发送
-
+    public static final String SERVICE_UUID = ("0000ffe0-0000-1000-8000-00805f9b34fb");//服务
+    protected static final String NOTIFICATION_UUID = ("0000ffe1-0000-1000-8000-00805f9b34fb");//接收
+    public static String WRITE_UUID = "0000ffe1-0000-1000-8000-00805f9b34fb";//发送
 
     private void init() {
-        mBLE = BluetoothBLeClass.getInstane(MainActivity.this, service, notifi, notifi)
+        mBLE = BluetoothBLeClass.getInstane(MainActivity.this, SERVICE_UUID,
+                NOTIFICATION_UUID,
+                WRITE_UUID)
                 .setScanTime(5000)//设置扫描时间为5秒 不设置默认5秒
                 .setAutoConnect(false)//设置断开后自动连接
-                .closeCleanCache(false)//设置每次断开连接都清除缓存
-                .setFiltration("SHTT", "TK");//设置过滤条件
+                .closeCleanCache(false);//设置每次断开连接都清除缓存
         if (!mBLE.initialize()) {
             //弹窗显示开启蓝牙
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -98,14 +123,34 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             //收到蓝牙设备返回的数据
             @Override
             public void onBleWriteResult(byte[] result) {
-                tv_result.setText(Util.Bytes2HexString(result));
+           /*     Log.d(TAG, "收到返回数据 : " + Util.Bytes2HexString(result));
+               if (mDatas.size() == 0) {
+                    long endTime = SystemClock.currentThreadTimeMillis();
+                    Log.d(TAG, "endTime : " + endTime);
+                    Log.d(TAG, "通信总耗时 : " + (endTime - mStartTime) + "毫秒");
+                    return;
+                }
+                byte[] remove = mDatas.remove(0);
+                write(remove);*/
+
+                //tv_result.setText(Util.Bytes2HexString(result));
             }
 
             //扫描回调  集合就是扫描到的附近的设备
             @Override
-            public void onBleScanResult(List<DeviceBean> device) {
-                if (keysSelectDialog.isShowing()) {
-                    keysSelectDialog.notifyDataSetChanged(device);
+            public void onBleScanResult(BluetoothDevice devices) {
+                String name = devices.getName();
+                if (!TextUtils.isEmpty(name) && (name.toUpperCase().startsWith("TK") || name.toUpperCase().startsWith("TL"))) {
+                    int size = devicesList.size();
+                    if (size == 0) {
+                        devicesList.add(devices);
+                    } else {
+                        if (!devicesList.contains(devices)) {
+                            devicesList.add(devices);
+                        }
+                    }
+                    //notify
+
                 }
             }
 
@@ -115,7 +160,15 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
              */
             @Override
             public void onWriteDataSucceed(byte[] value) {
-
+                Log.d(TAG, "onWriteDataSucceed : -----写入成功-----");
+                if (mDatas.size() == 0) {
+                    long endTime = SystemClock.currentThreadTimeMillis();
+                    Log.d(TAG, "endTime : " + endTime);
+                    Log.d(TAG, "通信总耗时 : " + (endTime - mStartTime) + "毫秒");
+                    return;
+                }
+                byte[] remove = mDatas.remove(0);
+                write(remove);
             }
 
             /**
@@ -146,7 +199,6 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             }
         });
     }
-
 
     /*和蓝牙设备交互的状态*/
     private void bleCurrentState(int state) {
@@ -257,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
 
     //点击设备开始连接
     @Override
-    public void OnKeySelected(DeviceBean blueToothKey) {
+    public void OnKeySelected(BluetoothDevice blueToothKey) {
         //记录当前连接的蓝牙设备名称
         currentConnectBle = blueToothKey.getName();
         //连接蓝牙
@@ -289,9 +341,10 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
 
     /*发送指令*/
     public void btn_send(View view) {
-       byte[] bytes = {0x7E,0x35,0x30,0x30,0x31,0x38,0x30,0x39,0x33,0x30,0x30,0x30,0x30,0x44,0x46,0x41,0x36,0x0D};
-        //byte[] bytes = {0x01,0x00, (byte) 0xFF};
-        write(bytes);
+        initData();
+        mStartTime = SystemClock.currentThreadTimeMillis();
+        Log.d(TAG, "mStartTime : " + mStartTime);
+        write(mDatas.remove(0));
     }
 
     /*发送指令 */
@@ -329,10 +382,10 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     }
 
     public void text(View view) {
-        boolean a  = true;
+        boolean a = true;
         if (a)
-            Log.d(TAG, "true : " );
-        Log.d(TAG, "false : " );
+            Log.d(TAG, "true : ");
+        Log.d(TAG, "false : ");
     }
 
     public void btn_textHander(View view) {

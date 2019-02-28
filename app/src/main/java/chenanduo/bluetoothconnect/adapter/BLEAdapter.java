@@ -1,5 +1,6 @@
 package chenanduo.bluetoothconnect.adapter;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -12,17 +13,16 @@ import android.widget.TextView;
 import java.util.List;
 
 import chenanduo.bluetoothconnect.R;
-import chenanduo.bluetoothconnect.github.DeviceBean;
 
 
 public class BLEAdapter extends BaseAdapter {
     private static final String TAG = "simpleBtTest";
     private Context context;
 
-    private List<DeviceBean> mmBlueToothKeys;
+    private List<BluetoothDevice> mmBlueToothKeys;
 
     public BLEAdapter(Context context,
-                      List<DeviceBean> mBlueToothKeys) {
+                      List<BluetoothDevice> mBlueToothKeys) {
         this.context = context;
         this.mmBlueToothKeys = mBlueToothKeys;
     }
@@ -70,7 +70,7 @@ public class BLEAdapter extends BaseAdapter {
             this.btn_img = (ImageView) view.findViewById(R.id.btn_img);
         }
 
-        public void setShow(DeviceBean key) {
+        public void setShow(BluetoothDevice key) {
             /*if (key.isBleKey()) {
                 String name = key.device.getName();
 				if (!TextUtils.isEmpty(name)) {
