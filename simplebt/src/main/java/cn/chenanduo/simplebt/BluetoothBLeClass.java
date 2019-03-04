@@ -474,8 +474,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
             Log.d(TAG, "不满足写数据条件,写入失败");
             return false;
         }
-        //TODO 待测试 数据大于20字节 可以自动分包
-        mWriteCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
         //设置数据内容
         mWriteCharacteristic.setValue(value);
         //往蓝牙模块写入数据

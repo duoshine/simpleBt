@@ -11,7 +11,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.SystemClock;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
@@ -28,6 +27,7 @@ import chenanduo.bluetoothconnect.github.BluetoothBLeClass;
 import chenanduo.bluetoothconnect.github.BluetoothChangeListener;
 import chenanduo.bluetoothconnect.util.DeviceShowDialog;
 import chenanduo.bluetoothconnect.util.ThreadUtils;
+import cn.chenanduo.simplebt.util.Util;
 
 /**
  * Created by chen on 5/25/17...  测试用类
@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     private TextView tv_result;
     private ProgressDialog mDialog;
     private Handler handler = new Handler();
-    private List<BluetoothDevice>devicesList  = new ArrayList<>();
+    private List<BluetoothDevice> devicesList = new ArrayList<>();
     //当前正在连接的蓝牙设备名称
     private static String currentConnectBle = null;
     private boolean isSuccess;
@@ -89,9 +89,9 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     protected static final String NOTIFICATION_UUID = ("6e400003-b5a3-f393-e0a9-e50e24dcca9e");//接收
     public static String WRITE_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";//发送*/
 
-    public static final String SERVICE_UUID = ("0000ffe0-0000-1000-8000-00805f9b34fb");//服务
-    protected static final String NOTIFICATION_UUID = ("0000ffe1-0000-1000-8000-00805f9b34fb");//接收
-    public static String WRITE_UUID = "0000ffe1-0000-1000-8000-00805f9b34fb";//发送
+    public static final String SERVICE_UUID = ("f000c0e0-0451-4000-b000-000000000000");//服务
+    protected static final String NOTIFICATION_UUID = ("f000c0e1-0451-4000-b000-000000000000");//接收
+    public static String WRITE_UUID = "f000c0e1-0451-4000-b000-000000000000";//发送
 
     private void init() {
         mBLE = BluetoothBLeClass.getInstane(MainActivity.this, SERVICE_UUID,
@@ -123,17 +123,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             //收到蓝牙设备返回的数据
             @Override
             public void onBleWriteResult(byte[] result) {
-           /*     Log.d(TAG, "收到返回数据 : " + Util.Bytes2HexString(result));
-               if (mDatas.size() == 0) {
-                    long endTime = SystemClock.currentThreadTimeMillis();
-                    Log.d(TAG, "endTime : " + endTime);
-                    Log.d(TAG, "通信总耗时 : " + (endTime - mStartTime) + "毫秒");
-                    return;
-                }
-                byte[] remove = mDatas.remove(0);
-                write(remove);*/
-
-                //tv_result.setText(Util.Bytes2HexString(result));
+                Log.d(TAG, "收到返回数据 : " + Util.Bytes2HexString(result));
             }
 
             //扫描回调  集合就是扫描到的附近的设备
@@ -150,7 +140,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
                         }
                     }
                     //notify
-
+                    keysSelectDialog.notifyDataSetChanged(devicesList);
                 }
             }
 
@@ -161,14 +151,6 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
             @Override
             public void onWriteDataSucceed(byte[] value) {
                 Log.d(TAG, "onWriteDataSucceed : -----写入成功-----");
-                if (mDatas.size() == 0) {
-                    long endTime = SystemClock.currentThreadTimeMillis();
-                    Log.d(TAG, "endTime : " + endTime);
-                    Log.d(TAG, "通信总耗时 : " + (endTime - mStartTime) + "毫秒");
-                    return;
-                }
-                byte[] remove = mDatas.remove(0);
-                write(remove);
             }
 
             /**
@@ -341,10 +323,10 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
 
     /*发送指令*/
     public void btn_send(View view) {
-        initData();
-        mStartTime = SystemClock.currentThreadTimeMillis();
-        Log.d(TAG, "mStartTime : " + mStartTime);
-        write(mDatas.remove(0));
+        //        initData();
+        //        mStartTime = SystemClock.currentThreadTimeMillis();
+        //        Log.d(TAG, "mStartTime : " + mStartTime);
+        write(new byte[]{0x1D, 0x00, 0x00, (byte) 0xC6, (byte) 0xE1});
     }
 
     /*发送指令 */
