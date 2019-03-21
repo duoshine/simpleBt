@@ -25,6 +25,9 @@ public abstract class BleBase {
     //发送指令方法
     public abstract boolean writeCharacteristic(byte[] value);
 
+    //获取当前设备连接状态
+    public abstract int getConnectState();
+
     //使用完Ble后一定要调用此方法释放资源
     public abstract void close();
 
@@ -36,7 +39,6 @@ public abstract class BleBase {
 
     //设置每次断开连接都清除缓存
     public abstract BluetoothBLeClass closeCleanCache(boolean isCloseCleanCache);
-
 
     //设置断开自动连接
     public abstract BluetoothBLeClass setAutoConnect(boolean isAutoConnect);

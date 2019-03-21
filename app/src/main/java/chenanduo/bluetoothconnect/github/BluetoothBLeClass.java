@@ -599,4 +599,17 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
             }
         });
     }
+
+    //获取当前设备连接状态
+    public int getConnectState() {
+        if (mBluetoothGatt == null || mBluetoothManager == null) {
+            return -1;
+        }
+        BluetoothDevice device = mBluetoothGatt.getDevice();
+        if (device == null) {
+            return -1;
+        }
+        int connectionState = mBluetoothManager.getConnectionState(device, BluetoothProfile.GATT_SERVER);
+        return connectionState;
+    }
 }

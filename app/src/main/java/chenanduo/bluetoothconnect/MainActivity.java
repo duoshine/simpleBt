@@ -22,12 +22,15 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import chenanduo.bluetoothconnect.github.BluetoothBLeClass;
 import chenanduo.bluetoothconnect.github.BluetoothChangeListener;
 import chenanduo.bluetoothconnect.util.DeviceShowDialog;
 import chenanduo.bluetoothconnect.util.ThreadUtils;
-import cn.chenanduo.simplebt.util.Util;
+import chenanduo.bluetoothconnect.util.Util;
+
 
 /**
  * Created by chen on 5/25/17...  测试用类
@@ -331,13 +334,13 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
 
     /*发送指令 */
     public void write(byte[] bytes) {
-        if (mBLE != null) {
-            if (mBLE.writeCharacteristic(bytes)) {
-                Log.d(TAG, "write : 发送成功");
-            } else {
-                Log.d(TAG, "write : 发送失败");
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                Log.d(TAG, "write : " + mBLE.getConnectState());
             }
-        }
+        },500, 500);
     }
 
     private void showDialog() {
