@@ -49,9 +49,11 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
     private List<BluetoothDevice> devicesList = new ArrayList<>();
     //当前正在连接的蓝牙设备名称
     private static String currentConnectBle = null;
-    private boolean isSuccess;
     private List<byte[]> mDatas = new ArrayList<>();
-    private long mStartTime;
+    private Timer mTimer;
+    private TimerTask mTimerTask3;
+    private TimerTask mTimerTask2;
+    private TimerTask mTimerTask1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
         setContentView(R.layout.activity_main);
         initView();
         init();
+        mTimer = new Timer();
     }
 
     @Override
@@ -334,13 +337,30 @@ public class MainActivity extends AppCompatActivity implements DeviceShowDialog.
 
     /*发送指令 */
     public void write(byte[] bytes) {
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Log.d(TAG, "write : " + mBLE.getConnectState());
-            }
-        },500, 500);
+            mTimerTask1 = new TimerTask() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "run : timerTask1");
+                    mTimerTask1.cancel();
+                    mTimerTask2.cancel();
+                    mTimerTask3.cancel();
+                }
+            };
+            mTimerTask2 = new TimerTask() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "run : timerTask2");
+                }
+            };
+            mTimerTask3 = new TimerTask() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "run : timerTask3");
+                }
+            };
+        mTimer.schedule(mTimerTask1, 600, 1000);
+        mTimer.schedule(mTimerTask2, 400, 1000);
+        mTimer.schedule(mTimerTask3, 200, 1000);
     }
 
     private void showDialog() {

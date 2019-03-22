@@ -41,8 +41,8 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     private static BluetoothManager mBluetoothManager;
     private static BluetoothAdapter mBluetoothAdapter;
     //本次连接的蓝牙地址
-    public String mBluetoothDeviceAddress;
-    public BluetoothGatt mBluetoothGatt;
+    private String mBluetoothDeviceAddress;
+    private BluetoothGatt mBluetoothGatt;
     //扫描时间
     private static long SCAN_PERIOD = 5000;
     //是否在扫描
@@ -63,26 +63,20 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     // 当前设备状态
     private int connectionState = STATE_DISCONNECTED;
     //设置自动重连
-    public static boolean isAutoConnect = false;
+    private  boolean isAutoConnect = false;
     //蓝牙是否连接
-    public static boolean isBleConnect = false;
+    public  boolean isBleConnect = false;
     //定时器 处理断开自动重连
     private Timer mTimer;
-    private static Context mContext;
-    //用来判断集合中是否已经有重复蓝牙设备
-    boolean exist = false;
+    private Context mContext;
     //每次断开连接是否清除缓存
-    public static boolean isCloseCleanCache = false;
-    //过滤条件  目前只支持两个条件过滤
-    public static String filtration1 = null;
-    public static String filtration2 = null;
+    private  boolean isCloseCleanCache = false;
     //写的uuid
     private BluetoothGattCharacteristic mWriteCharacteristic;
     //是否具备通信条件
     private boolean isCommunication;
     private BluetoothChangeListener mBluetoothChangeListener;
     private BluetoothGattCharacteristic mNotifiCharacteristic;
-    private boolean mIsSetCharacteristicNotification;
 
     //用于不确定uuid的情况下 先扫描 后选择uuid再设置特征
     private BluetoothGatt localGatt;
@@ -106,24 +100,25 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
 
     private BluetoothBLeClass(Context c) {
         mContext = c;
+        if (mTimer == null) {
+            mTimer = new Timer();
+        }
     }
 
     public static BluetoothBLeClass getInstane(Context context, String serviceuuid, String notifiuuid, String writeuuid) {
         if (mBLE == null) {
-            mContext = context;
-            mBLE = new BluetoothBLeClass(mContext);
+            mBLE = new BluetoothBLeClass(context);
             SERVICE_UUID = serviceuuid;
             NOTIFI_UUID = notifiuuid;
             WRITE_UUID = writeuuid;
-
-            if (!mContext.getPackageManager().hasSystemFeature(
+            if (!context.getPackageManager().hasSystemFeature(
                     PackageManager.FEATURE_BLUETOOTH_LE)) {
                 Log.d(TAG, "该设备不支持ble");
                 return null;
             }
             if (mBluetoothManager == null) {
-                mBluetoothManager = (BluetoothManager) mContext
-                        .getSystemService(Context.BLUETOOTH_SERVICE);
+                mBluetoothManager = (BluetoothManager) context
+                        .getSystemService(context.BLUETOOTH_SERVICE);
             }
             if (mBluetoothAdapter == null) {
                 mBluetoothAdapter = mBluetoothManager.getAdapter();
@@ -267,8 +262,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
             return;
         }
         //启用通知
-        mIsSetCharacteristicNotification = mBluetoothGatt.setCharacteristicNotification(mNotifiCharacteristic, true);
-
+        mBluetoothGatt.setCharacteristicNotification(mNotifiCharacteristic, true);
         //描述特诊和控制特诊的某些行为 BluetoothGattDescriptor  比如开启通知(我之前就遇到过设备通知是需要开启的)
         BluetoothGattDescriptor descriptor = mNotifiCharacteristic
                 //返回给定uuid的描述符
@@ -280,7 +274,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         }
         //更新此描述符的本地存储值
         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-        mBluetoothGatt.writeDescriptor(descriptor);//todo 注意这里只是修改一下还要解开注释 注释临时为了解决问题
+        mBluetoothGatt.writeDescriptor(descriptor);
 
 
         /*BluetoothGattDescriptor descriptor = mNotifiCharacteristic.getDescriptor(UUID.fromString(DISENABLE));
@@ -351,19 +345,13 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         }
         //如果用户开启自动重连 且蓝牙是断开连接状态会走进去
         if (isAutoConnect && !isBleConnect) {
-            //开启定时器 每五秒重连一次蓝牙设备  必须判断是否为Null  始终保证只有一个定时器对象
-            if (mTimer == null) {
-                mTimer = new Timer();
-            }
             mTimer.schedule(new TimerTask() {
                 @Override
                 public void run() {
                     //如果已经连接上就停止定时器
                     if (isBleConnect == true) {
-                        if (mTimer != null) {
-                            mTimer.cancel();
-                            mTimer = null;
-                        }
+                        Log.d(TAG, "run : 已连接 取消任务");
+                        this.cancel();
                     } else {
                         //设置状态正在尝试重连
                         runonUiThread(STATE_RESETCONNECT);
@@ -420,7 +408,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         }
         // 想直接连接设备传入false
         mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback);
-
         mBluetoothDeviceAddress = address;
         return true;
     }
@@ -436,7 +423,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         //不具备通信条件
         isCommunication = false;
         mBluetoothGatt.disconnect();
-
     }
 
     /*
@@ -451,15 +437,16 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         //不具备通信条件了
         isCommunication = false;
         if (mTimer != null) {
-            Log.d(TAG, "close : " + "应用销毁 停止计时器");
             mTimer.cancel();
             mTimer = null;
         }
-        if (mBluetoothGatt == null) {
-            return;
+        if (mBluetoothGatt != null) {
+            mBluetoothGatt.close();
+            mBluetoothGatt = null;
         }
-        mBluetoothGatt.close();
-        mBluetoothGatt = null;
+        if (mHandler != null) {
+            mHandler.removeCallbacksAndMessages(null);
+        }
     }
 
     /*
@@ -598,18 +585,5 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
                 setBleCurrentState(state);
             }
         });
-    }
-
-    //获取当前设备连接状态
-    public int getConnectState() {
-        if (mBluetoothGatt == null || mBluetoothManager == null) {
-            return -1;
-        }
-        BluetoothDevice device = mBluetoothGatt.getDevice();
-        if (device == null) {
-            return -1;
-        }
-        int connectionState = mBluetoothManager.getConnectionState(device, BluetoothProfile.GATT_SERVER);
-        return connectionState;
     }
 }
