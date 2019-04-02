@@ -35,11 +35,11 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     private static BluetoothBLeClass mBLE;
     private final static String TAG = "simpleBtTest";
     //uuid 由构造函数传入
-    private static String SERVICE_UUID;
-    private static String NOTIFI_UUID;
-    private static String WRITE_UUID;
-    private static BluetoothManager mBluetoothManager;
-    private static BluetoothAdapter mBluetoothAdapter;
+    private String SERVICE_UUID;
+    private String NOTIFI_UUID;
+    private String WRITE_UUID;
+    private BluetoothManager mBluetoothManager;
+    private BluetoothAdapter mBluetoothAdapter;
     //本次连接的蓝牙地址
     private String mBluetoothDeviceAddress;
     private BluetoothGatt mBluetoothGatt;
@@ -63,14 +63,14 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
     // 当前设备状态
     private int connectionState = STATE_DISCONNECTED;
     //设置自动重连
-    private  boolean isAutoConnect = false;
+    private boolean isAutoConnect = false;
     //蓝牙是否连接
-    public  boolean isBleConnect = false;
+    public boolean isBleConnect = false;
     //定时器 处理断开自动重连
     private Timer mTimer;
     private Context mContext;
     //每次断开连接是否清除缓存
-    private  boolean isCloseCleanCache = false;
+    private boolean isCloseCleanCache = false;
     //写的uuid
     private BluetoothGattCharacteristic mWriteCharacteristic;
     //是否具备通信条件
@@ -98,31 +98,31 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         WRITE_UUID = write_uuid;
     }
 
-    private BluetoothBLeClass(Context c) {
-        mContext = c;
+    private BluetoothBLeClass(Context context, String serviceuuid, String notifiuuid, String writeuuid) {
+        mContext = context;
+        SERVICE_UUID = serviceuuid;
+        NOTIFI_UUID = notifiuuid;
+        WRITE_UUID = writeuuid;
+        if (mBluetoothManager == null) {
+            mBluetoothManager = (BluetoothManager) context
+                    .getSystemService(context.BLUETOOTH_SERVICE);
+        }
+        if (mBluetoothAdapter == null) {
+            mBluetoothAdapter = mBluetoothManager.getAdapter();
+        }
         if (mTimer == null) {
             mTimer = new Timer();
         }
     }
 
     public static BluetoothBLeClass getInstane(Context context, String serviceuuid, String notifiuuid, String writeuuid) {
+        if (!context.getPackageManager().hasSystemFeature(
+                PackageManager.FEATURE_BLUETOOTH_LE)) {
+            Log.d(TAG, "该设备不支持ble");
+            return null;
+        }
         if (mBLE == null) {
-            mBLE = new BluetoothBLeClass(context);
-            SERVICE_UUID = serviceuuid;
-            NOTIFI_UUID = notifiuuid;
-            WRITE_UUID = writeuuid;
-            if (!context.getPackageManager().hasSystemFeature(
-                    PackageManager.FEATURE_BLUETOOTH_LE)) {
-                Log.d(TAG, "该设备不支持ble");
-                return null;
-            }
-            if (mBluetoothManager == null) {
-                mBluetoothManager = (BluetoothManager) context
-                        .getSystemService(context.BLUETOOTH_SERVICE);
-            }
-            if (mBluetoothAdapter == null) {
-                mBluetoothAdapter = mBluetoothManager.getAdapter();
-            }
+            mBLE = new BluetoothBLeClass(context, serviceuuid, notifiuuid, writeuuid);
         }
         return mBLE;
     }
@@ -160,7 +160,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
          */
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            Log.d(TAG, "newState : " + newState);
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 //连接上蓝牙设备
                 initConnected(gatt);
@@ -390,16 +389,6 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         stopScanDevices();
         /*设置状态连接中*/
         setBleCurrentState(STATE_CONNECTING);
-        // 之前连接的设备尝试重新连接
-        if (mBluetoothDeviceAddress != null
-                && address.equals(mBluetoothDeviceAddress)
-                && mBluetoothGatt != null) {
-            if (mBluetoothGatt.connect()) {
-                return true;
-            } else {
-                return false;
-            }
-        }
         //根据mac地址连接蓝牙
         final BluetoothDevice device = mBluetoothAdapter
                 .getRemoteDevice(address);
@@ -423,6 +412,7 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         //不具备通信条件
         isCommunication = false;
         mBluetoothGatt.disconnect();
+        mBluetoothGatt.close();
     }
 
     /*
