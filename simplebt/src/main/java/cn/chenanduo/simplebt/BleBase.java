@@ -1,6 +1,8 @@
 package cn.chenanduo.simplebt;
 
 
+import android.bluetooth.BluetoothDevice;
+
 /**
  * Created by chen on 2017 封装所有暴露给用户的接口 不需要关注具体实现
  */
@@ -49,5 +51,6 @@ public abstract class BleBase {
     //用于固件升级
     public abstract void setUUID(String service_uuid, String notifi_uuid, String write_uuid);
 
-
+    //返回当前gatt对应的远程设备
+    public abstract BluetoothDevice getRemoteDevice();
 }

@@ -576,4 +576,12 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
             }
         });
     }
+
+    @Override
+    public BluetoothDevice getRemoteDevice() {
+        if (mBluetoothGatt == null) {
+            return null;
+        }
+        return mBluetoothGatt.getDevice();
+    }
 }

@@ -98,6 +98,14 @@ public class BluetoothBLeClass extends BleBase implements LeScanCallback {
         WRITE_UUID = write_uuid;
     }
 
+    @Override
+    public BluetoothDevice getRemoteDevice() {
+        if (mBluetoothGatt == null) {
+            return null;
+        }
+        return mBluetoothGatt.getDevice();
+    }
+
     private BluetoothBLeClass(Context context, String serviceuuid, String notifiuuid, String writeuuid) {
         mContext = context;
         SERVICE_UUID = serviceuuid;
